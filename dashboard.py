@@ -70,6 +70,11 @@ def main():
     st.title("🏛️ Reform UK Digital Footprint Analysis")
     st.markdown("Analysis of Reform UK's digital messaging across platforms")
     
+    # Add refresh button
+    if st.button("🔄 Refresh Data", help="Clear cache and reload data from database"):
+        st.cache_data.clear()
+        st.rerun()
+    
     # Load data
     messages_df, keywords_df = load_data()
     
@@ -151,14 +156,17 @@ def main():
     
     with col2:
         st.subheader("Message Types")
-        if 'message_type' in filtered_messages.columns:
+        if 'message_type' in filtered_messages.columns and not filtered_messages['message_type'].isna().all():
             type_counts = filtered_messages['message_type'].value_counts()
             fig_bar = px.bar(
-                x=type_counts.index,
-                y=type_counts.values,
+                x=type_counts.values,
+                y=type_counts.index,
+                orientation='h',
                 title="Messages by Type"
             )
             st.plotly_chart(fig_bar, use_container_width=True)
+        else:
+            st.info("No message type data available")
     
     # Timeline chart
     st.subheader("Message Frequency Over Time")

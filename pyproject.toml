@@ -23,7 +23,8 @@ dependencies = [
     "pandas>=2.1.0",
     "plotly>=5.17.0",
     "python-dotenv>=1.0.0",
-    "loguru>=0.7.0"
+    "loguru>=0.7.0",
+    "pypdf2>=3.0.1",
 ]
 
 [project.optional-dependencies]
