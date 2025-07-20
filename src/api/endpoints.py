@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List, Dict, Any
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from loguru import logger
 
 from ..database import get_session
@@ -32,14 +33,14 @@ def get_or_create_source(db: Session, source_name: str, source_type: str, source
             source_type=source_type,
             url=source_url,
             active=True,
-            last_scraped=datetime.utcnow()
+            last_scraped=datetime.now()
         )
         db.add(source)
         db.flush()
         logger.info(f"Created new source: {source_name}")
     else:
         # Update last scraped time
-        source.last_scraped = datetime.utcnow()
+        source.last_scraped = datetime.now()
     
     return source
 
@@ -130,7 +131,7 @@ async def submit_single_message(
             message_type=message_data.message_type,
             message_metadata=message_data.metadata,
             raw_data=message_data.raw_data,
-            scraped_at=datetime.utcnow()
+            scraped_at=datetime.now()
         )
         
         db.add(message)
@@ -199,7 +200,7 @@ async def submit_bulk_messages(
                     message_type=message_data.message_type,
                     message_metadata=message_data.metadata,
                     raw_data=message_data.raw_data,
-                    scraped_at=datetime.utcnow()
+                    scraped_at=datetime.now()
                 )
                 
                 db.add(message)
@@ -272,7 +273,7 @@ async def get_message_stats(db: Session = Depends(get_session)):
     total_sources = db.query(Source).count()
     
     # Messages by source type
-    source_stats = db.query(Source.source_type, db.func.count(Message.id))\
+    source_stats = db.query(Source.source_type, func.count(Message.id))\
         .join(Message)\
         .group_by(Source.source_type)\
         .all()
