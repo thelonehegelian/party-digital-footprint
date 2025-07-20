@@ -1,0 +1,192 @@
+[
+  {
+    "content": "STOP THE BOATS | Britain's borders are out of control. Thousands crossing illegally while families wait for housing. Vote Reform UK for controlled immigration that works for Britain. | Take Back Control | Learn More",
+    "url": "https://www.facebook.com/ads/library/?id=123456789012345678",
+    "published_at": "2024-04-16T08:00:00Z",
+    "message_type": "ad",
+    "metadata": {
+      "page_name": "Reform UK",
+      "funding_entity": "Reform UK Limited",
+      "currency": "GBP",
+      "publisher_platforms": ["Facebook", "Instagram"],
+      "estimated_audience_size": {
+        "lower_bound": 50000,
+        "upper_bound": 100000
+      },
+      "delivery_dates": {
+        "start": "2024-04-16T08:00:00Z",
+        "stop": "2024-04-23T23:59:59Z"
+      },
+      "spend": {
+        "lower_bound": 5000,
+        "upper_bound": 10000
+      },
+      "impressions": {
+        "lower_bound": 500000,
+        "upper_bound": 750000
+      },
+      "demographics": {
+        "age": ["35-44", "45-54", "55-64"],
+        "gender": ["men", "women"]
+      },
+      "delivery_regions": ["England", "Wales", "Scotland"]
+    },
+    "raw_data": {
+      "ad_id": "123456789012345678",
+      "page_id": "987654321098765432",
+      "scraper": "meta_ads"
+    }
+  },
+  {
+    "content": "NHS IN CRISIS | 7.6 million on waiting lists. Patients suffering while bureaucrats get pay rises. Reform UK has the plan to fix our NHS. | Patients Before Politics | Read Our Plan",
+    "url": "https://www.facebook.com/ads/library/?id=234567890123456789",
+    "published_at": "2024-04-15T10:30:00Z",
+    "message_type": "ad",
+    "metadata": {
+      "page_name": "Reform UK",
+      "funding_entity": "Reform UK Limited",
+      "currency": "GBP",
+      "publisher_platforms": ["Facebook"],
+      "estimated_audience_size": {
+        "lower_bound": 75000,
+        "upper_bound": 125000
+      },
+      "delivery_dates": {
+        "start": "2024-04-15T10:30:00Z",
+        "stop": "2024-04-22T23:59:59Z"
+      },
+      "spend": {
+        "lower_bound": 3000,
+        "upper_bound": 6000
+      },
+      "impressions": {
+        "lower_bound": 300000,
+        "upper_bound": 500000
+      },
+      "demographics": {
+        "age": ["45-54", "55-64", "65+"],
+        "gender": ["men", "women"]
+      },
+      "delivery_regions": ["England", "Wales"]
+    },
+    "raw_data": {
+      "ad_id": "234567890123456789",
+      "page_id": "987654321098765432",
+      "scraper": "meta_ads"
+    }
+  },
+  {
+    "content": "ENERGY INDEPENDENCE | Stop relying on foreign dictators for our energy. Britain has vast North Sea resources. Reform UK: drill for Britain, not foreign powers. | Energy Security Now | Join Us",
+    "url": "https://www.facebook.com/ads/library/?id=345678901234567890",
+    "published_at": "2024-04-14T12:15:00Z",
+    "message_type": "ad",
+    "metadata": {
+      "page_name": "Reform UK",
+      "funding_entity": "Reform UK Limited",
+      "currency": "GBP",
+      "publisher_platforms": ["Facebook", "Instagram"],
+      "estimated_audience_size": {
+        "lower_bound": 40000,
+        "upper_bound": 80000
+      },
+      "delivery_dates": {
+        "start": "2024-04-14T12:15:00Z",
+        "stop": "2024-04-21T23:59:59Z"
+      },
+      "spend": {
+        "lower_bound": 2500,
+        "upper_bound": 5000
+      },
+      "impressions": {
+        "lower_bound": 250000,
+        "upper_bound": 400000
+      },
+      "demographics": {
+        "age": ["25-34", "35-44", "45-54"],
+        "gender": ["men", "women"]
+      },
+      "delivery_regions": ["England", "Scotland", "Wales"]
+    },
+    "raw_data": {
+      "ad_id": "345678901234567890",
+      "page_id": "987654321098765432",
+      "scraper": "meta_ads"
+    }
+  },
+  {
+    "content": "HOUSING CRISIS | Young people can't afford homes while mass immigration drives up demand. Reform UK: Homes for Britons first. | Build for Britain | Support Our Policy",
+    "url": "https://www.facebook.com/ads/library/?id=456789012345678901",
+    "published_at": "2024-04-13T15:45:00Z",
+    "message_type": "ad",
+    "metadata": {
+      "page_name": "Reform UK",
+      "funding_entity": "Reform UK Limited",
+      "currency": "GBP",
+      "publisher_platforms": ["Facebook"],
+      "estimated_audience_size": {
+        "lower_bound": 30000,
+        "upper_bound": 60000
+      },
+      "delivery_dates": {
+        "start": "2024-04-13T15:45:00Z",
+        "stop": "2024-04-20T23:59:59Z"
+      },
+      "spend": {
+        "lower_bound": 2000,
+        "upper_bound": 4000
+      },
+      "impressions": {
+        "lower_bound": 200000,
+        "upper_bound": 350000
+      },
+      "demographics": {
+        "age": ["18-24", "25-34", "35-44"],
+        "gender": ["men", "women"]
+      },
+      "delivery_regions": ["England", "Wales"]
+    },
+    "raw_data": {
+      "ad_id": "456789012345678901",
+      "page_id": "987654321098765432",
+      "scraper": "meta_ads"
+    }
+  },
+  {
+    "content": "BREXIT BETRAYED | The establishment wants to reverse Brexit by stealth. Reform UK will deliver the Brexit Britain voted for. Take back control of our laws, borders, and money. | True Brexit | Vote Reform",
+    "url": "https://www.facebook.com/ads/library/?id=567890123456789012",
+    "published_at": "2024-04-12T09:20:00Z",
+    "message_type": "ad",
+    "metadata": {
+      "page_name": "Reform UK",
+      "funding_entity": "Reform UK Limited",
+      "currency": "GBP",
+      "publisher_platforms": ["Facebook", "Instagram"],
+      "estimated_audience_size": {
+        "lower_bound": 60000,
+        "upper_bound": 100000
+      },
+      "delivery_dates": {
+        "start": "2024-04-12T09:20:00Z",
+        "stop": "2024-04-19T23:59:59Z"
+      },
+      "spend": {
+        "lower_bound": 4000,
+        "upper_bound": 7500
+      },
+      "impressions": {
+        "lower_bound": 400000,
+        "upper_bound": 600000
+      },
+      "demographics": {
+        "age": ["45-54", "55-64", "65+"],
+        "gender": ["men", "women"]
+      },
+      "delivery_regions": ["England", "Wales", "Scotland"]
+    },
+    "raw_data": {
+      "ad_id": "567890123456789012",
+      "page_id": "987654321098765432",
+      "scraper": "meta_ads"
+    }
+  }
+]
