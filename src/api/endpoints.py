@@ -6,18 +6,21 @@ from sqlalchemy import func
 from loguru import logger
 
 from ..database import get_session
-from ..models import Source, Message, Keyword, Constituency, Candidate
+from ..models import Source, Message, Keyword, Constituency, Candidate, MessageSentiment
 from ..nlp.processor import BasicNLPProcessor
+from ..analytics.sentiment import PoliticalSentimentAnalyzer
 from .schemas import (
     MessageInput, BulkMessageInput, MessageResponse, 
-    BulkMessageResponse, ErrorResponse
+    BulkMessageResponse, ErrorResponse, SentimentAnalysisRequest,
+    SentimentAnalysisResponse, SentimentTrendsResponse
 )
 
 router = APIRouter(prefix="/api/v1", tags=["messages"])
 
-# Initialize NLP processor
+# Initialize NLP processor and sentiment analyzer
 nlp_processor = BasicNLPProcessor()
 nlp_processor.load_model()
+sentiment_analyzer = PoliticalSentimentAnalyzer()
 
 
 def get_or_create_source(db: Session, source_name: str, source_type: str, source_url: str = None) -> Source:
@@ -466,3 +469,286 @@ async def get_candidate_messages(
             for msg in messages
         ]
     }
+
+
+@router.post("/analytics/sentiment/analyze", response_model=SentimentAnalysisResponse, tags=["analytics"])
+async def analyze_message_sentiment(
+    request: SentimentAnalysisRequest,
+    use_dummy: bool = True,
+    db: Session = Depends(get_session)
+):
+    """
+    Analyze sentiment for a specific message or batch of messages.
+    
+    Provides political sentiment analysis including:
+    - Basic sentiment scoring (-1 to 1, negative to positive)
+    - Sentiment classification (positive, negative, neutral)
+    - Political tone detection (aggressive, diplomatic, populist, nationalist)
+    - Emotional categorization (anger, fear, hope, pride)
+    - Confidence scores for all classifications
+    
+    **Parameters:**
+    - `message_id` (optional): Analyze specific message by ID
+    - `content` (optional): Analyze provided text content directly  
+    - `use_dummy`: Use dummy data generator for testing (default: true)
+    
+    **Returns:**
+    - Comprehensive sentiment analysis results
+    - Political tone and emotional classifications
+    - Analysis metadata including method used
+    """
+    try:
+        if request.message_id:
+            # Analyze existing message by ID
+            message = db.query(Message).filter(Message.id == request.message_id).first()
+            if not message:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Message not found"
+                )
+            
+            # Check if sentiment already exists
+            existing_sentiment = db.query(MessageSentiment)\
+                .filter(MessageSentiment.message_id == message.id)\
+                .first()
+            
+            if existing_sentiment:
+                return SentimentAnalysisResponse(
+                    message_id=message.id,
+                    content_preview=message.content[:100] + "...",
+                    sentiment_score=existing_sentiment.sentiment_score,
+                    sentiment_label=existing_sentiment.sentiment_label,
+                    confidence=existing_sentiment.confidence,
+                    political_tone=existing_sentiment.political_tone,
+                    tone_confidence=existing_sentiment.tone_confidence,
+                    emotions=existing_sentiment.emotions,
+                    analysis_method=existing_sentiment.analysis_method,
+                    analyzed_at=existing_sentiment.analyzed_at
+                )
+            
+            # Generate new sentiment analysis
+            if use_dummy:
+                sentiment_result = sentiment_analyzer.generate_dummy_sentiment(message)
+            else:
+                sentiment_result = sentiment_analyzer.analyze_message_sentiment(message.content)
+            
+            # Store in database
+            sentiment_record = MessageSentiment(
+                message_id=message.id,
+                sentiment_score=sentiment_result.sentiment_score,
+                sentiment_label=sentiment_result.sentiment_label,
+                confidence=sentiment_result.confidence,
+                political_tone=sentiment_result.political_tone,
+                tone_confidence=sentiment_result.tone_confidence,
+                emotions=sentiment_result.emotions,
+                analysis_method=sentiment_result.analysis_method,
+                analyzed_at=datetime.utcnow()
+            )
+            db.add(sentiment_record)
+            db.commit()
+            
+            return SentimentAnalysisResponse(
+                message_id=message.id,
+                content_preview=message.content[:100] + "...",
+                sentiment_score=sentiment_result.sentiment_score,
+                sentiment_label=sentiment_result.sentiment_label,
+                confidence=sentiment_result.confidence,
+                political_tone=sentiment_result.political_tone,
+                tone_confidence=sentiment_result.tone_confidence,
+                emotions=sentiment_result.emotions,
+                analysis_method=sentiment_result.analysis_method,
+                analyzed_at=sentiment_record.analyzed_at
+            )
+            
+        elif request.content:
+            # Analyze provided content directly (no database storage)
+            if use_dummy:
+                # Create temporary message object for dummy analysis
+                temp_message = Message(content=request.content)
+                sentiment_result = sentiment_analyzer.generate_dummy_sentiment(temp_message)
+            else:
+                sentiment_result = sentiment_analyzer.analyze_message_sentiment(request.content)
+            
+            return SentimentAnalysisResponse(
+                content_preview=request.content[:100] + "..." if len(request.content) > 100 else request.content,
+                sentiment_score=sentiment_result.sentiment_score,
+                sentiment_label=sentiment_result.sentiment_label,
+                confidence=sentiment_result.confidence,
+                political_tone=sentiment_result.political_tone,
+                tone_confidence=sentiment_result.tone_confidence,
+                emotions=sentiment_result.emotions,
+                analysis_method=sentiment_result.analysis_method,
+                analyzed_at=datetime.utcnow()
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Either message_id or content must be provided"
+            )
+            
+    except Exception as e:
+        logger.error(f"Error analyzing sentiment: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error analyzing sentiment: {str(e)}"
+        )
+
+
+@router.post("/analytics/sentiment/batch", tags=["analytics"])
+async def analyze_batch_sentiment(
+    use_dummy: bool = True,
+    limit: int = 100,
+    db: Session = Depends(get_session)
+):
+    """
+    Analyze sentiment for all messages without existing sentiment data.
+    
+    Batch processes messages for sentiment analysis with the following features:
+    - Processes messages without existing sentiment records
+    - Configurable batch size (default: 100, max: 1000)
+    - Choice between real TextBlob analysis or dummy data generation
+    - Comprehensive progress reporting
+    
+    **Parameters:**
+    - `use_dummy`: Use dummy sentiment generator for testing (default: true)
+    - `limit`: Maximum number of messages to process (default: 100, max: 1000)
+    
+    **Returns:**
+    - Number of messages analyzed
+    - Processing summary with timing information
+    - Error count if any failures occurred
+    """
+    try:
+        if limit > 1000:
+            limit = 1000
+            
+        start_time = datetime.utcnow()
+        analyzed_count = sentiment_analyzer.analyze_batch_messages(db, use_dummy=use_dummy, limit=limit)
+        end_time = datetime.utcnow()
+        processing_time = (end_time - start_time).total_seconds()
+        
+        return {
+            "status": "success",
+            "analyzed_count": analyzed_count,
+            "processing_time_seconds": processing_time,
+            "analysis_method": "dummy_generator" if use_dummy else "textblob_political",
+            "batch_limit": limit,
+            "completed_at": end_time
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in batch sentiment analysis: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error processing batch sentiment analysis: {str(e)}"
+        )
+
+
+@router.get("/analytics/sentiment/trends", response_model=SentimentTrendsResponse, tags=["analytics"])
+async def get_sentiment_trends(
+    days: int = 7,
+    db: Session = Depends(get_session)
+):
+    """
+    Get sentiment trends over time for Reform UK messaging.
+    
+    Analyzes sentiment patterns across time periods with:
+    - Daily sentiment averages and message counts
+    - Sentiment distribution (positive, negative, neutral)
+    - Political tone trends over time
+    - Overall statistics for the specified period
+    
+    **Parameters:**
+    - `days`: Number of days to analyze (default: 7, max: 90)
+    
+    **Returns:**
+    - Daily sentiment data with averages and counts
+    - Overall sentiment statistics for the period
+    - Sentiment distribution breakdown
+    - Political tone analysis trends
+    """
+    try:
+        if days > 90:
+            days = 90
+            
+        trends_data = sentiment_analyzer.get_sentiment_trends(db, days=days)
+        
+        return SentimentTrendsResponse(
+            period_days=trends_data['period_days'],
+            daily_data=trends_data['daily_data'],
+            overall_stats=trends_data['overall_stats']
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting sentiment trends: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving sentiment trends: {str(e)}"
+        )
+
+
+@router.get("/analytics/sentiment/stats", tags=["analytics"])
+async def get_sentiment_statistics(db: Session = Depends(get_session)):
+    """
+    Get comprehensive sentiment analysis statistics.
+    
+    Provides overall sentiment analysis metrics including:
+    - Total messages with sentiment analysis
+    - Sentiment distribution (positive, negative, neutral percentages)
+    - Political tone distribution (aggressive, diplomatic, populist, nationalist)
+    - Average sentiment scores and confidence levels
+    - Analysis method breakdown (TextBlob vs dummy data)
+    
+    **Returns:**
+    - Complete sentiment analysis overview
+    - Statistical breakdowns by classification type
+    - Analysis quality metrics
+    """
+    try:
+        # Basic counts
+        total_analyzed = db.query(MessageSentiment).count()
+        total_messages = db.query(Message).count()
+        
+        if total_analyzed == 0:
+            return {
+                "total_messages": total_messages,
+                "total_analyzed": 0,
+                "analysis_coverage": 0.0,
+                "sentiment_distribution": {},
+                "political_tone_distribution": {},
+                "average_sentiment_score": 0.0,
+                "average_confidence": 0.0
+            }
+        
+        # Sentiment distribution
+        sentiment_dist = db.query(
+            MessageSentiment.sentiment_label,
+            func.count(MessageSentiment.id)
+        ).group_by(MessageSentiment.sentiment_label).all()
+        
+        # Political tone distribution
+        tone_dist = db.query(
+            MessageSentiment.political_tone,
+            func.count(MessageSentiment.id)
+        ).group_by(MessageSentiment.political_tone).all()
+        
+        # Average scores
+        avg_sentiment = db.query(func.avg(MessageSentiment.sentiment_score)).scalar() or 0.0
+        avg_confidence = db.query(func.avg(MessageSentiment.confidence)).scalar() or 0.0
+        
+        return {
+            "total_messages": total_messages,
+            "total_analyzed": total_analyzed,
+            "analysis_coverage": (total_analyzed / total_messages * 100) if total_messages > 0 else 0.0,
+            "sentiment_distribution": dict(sentiment_dist),
+            "political_tone_distribution": dict(tone_dist),
+            "average_sentiment_score": float(avg_sentiment),
+            "average_confidence": float(avg_confidence)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting sentiment statistics: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving sentiment statistics: {str(e)}"
+        )

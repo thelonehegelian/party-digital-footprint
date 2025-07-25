@@ -142,3 +142,40 @@ class ScrapedMessage(BaseModel):
             metadata=self.metadata,
             raw_data=self.raw_data
         )
+
+
+# Analytics schemas
+class SentimentAnalysisRequest(BaseModel):
+    """Request schema for sentiment analysis."""
+    message_id: Optional[int] = Field(None, description="ID of message to analyze")
+    content: Optional[str] = Field(None, description="Content to analyze directly")
+    
+    @validator('content')
+    def validate_input(cls, v, values):
+        if not values.get('message_id') and not v:
+            raise ValueError('Either message_id or content must be provided')
+        return v
+    
+    class Config:
+        validate_assignment = True
+
+
+class SentimentAnalysisResponse(BaseModel):
+    """Response schema for sentiment analysis."""
+    message_id: Optional[int] = None
+    content_preview: str
+    sentiment_score: float = Field(description="Sentiment score from -1 (negative) to 1 (positive)")
+    sentiment_label: str = Field(description="Sentiment classification: positive, negative, or neutral")
+    confidence: float = Field(description="Confidence score from 0 to 1")
+    political_tone: str = Field(description="Political tone: aggressive, diplomatic, populist, or nationalist")
+    tone_confidence: float = Field(description="Political tone confidence from 0 to 1")
+    emotions: Dict[str, float] = Field(description="Emotional content scores")
+    analysis_method: str = Field(description="Method used for analysis")
+    analyzed_at: datetime
+
+
+class SentimentTrendsResponse(BaseModel):
+    """Response schema for sentiment trends."""
+    period_days: int
+    daily_data: List[Dict[str, Any]] = Field(description="Daily sentiment data")
+    overall_stats: Dict[str, Any] = Field(description="Overall statistics for the period")
