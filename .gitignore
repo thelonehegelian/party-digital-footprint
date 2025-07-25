@@ -1,6 +1,3 @@
 .env
 reform_messaging.db
-/__pycache__
-src/api/__pycache__
-src/transformers/__pycache__
-alembic/__pycache__
+**/__pycache__/
