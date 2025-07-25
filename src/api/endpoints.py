@@ -1291,7 +1291,15 @@ async def analyze_message_engagement(
         
         if request.message_id:
             # Analyze existing message
-            message = db.query(Message).filter(Message.id == request.message_id).first()
+            try:
+                message = db.query(Message).filter(Message.id == request.message_id).first()
+            except Exception as e:
+                logger.error(f"Database error when finding message: {e}")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Message not found"
+                )
+            
             if not message:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,

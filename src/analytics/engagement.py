@@ -350,8 +350,13 @@ class PoliticalEngagementAnalyzer:
         Returns:
             Dictionary with engagement overview data
         """
-        total_messages = db.query(Message).count()
-        analyzed_messages = db.query(EngagementMetrics).count()
+        try:
+            total_messages = db.query(Message).count()
+            analyzed_messages = db.query(EngagementMetrics).count()
+        except Exception:
+            # Handle empty database or missing tables
+            total_messages = 0
+            analyzed_messages = 0
         
         if analyzed_messages == 0:
             return {
@@ -409,16 +414,20 @@ class PoliticalEngagementAnalyzer:
         Returns:
             Dictionary with platform comparison data
         """
-        platform_stats = db.query(
-            Source.source_type,
-            func.count(EngagementMetrics.id).label('message_count'),
-            func.avg(EngagementMetrics.engagement_score).label('avg_engagement'),
-            func.avg(EngagementMetrics.virality_score).label('avg_virality'),
-            func.avg(EngagementMetrics.influence_score).label('avg_influence')
-        ).join(Message, Source.id == Message.source_id)\
-         .join(EngagementMetrics, Message.id == EngagementMetrics.message_id)\
-         .group_by(Source.source_type)\
-         .all()
+        try:
+            platform_stats = db.query(
+                Source.source_type,
+                func.count(EngagementMetrics.id).label('message_count'),
+                func.avg(EngagementMetrics.engagement_score).label('avg_engagement'),
+                func.avg(EngagementMetrics.virality_score).label('avg_virality'),
+                func.avg(EngagementMetrics.influence_score).label('avg_influence')
+            ).join(Message, Source.id == Message.source_id)\
+             .join(EngagementMetrics, Message.id == EngagementMetrics.message_id)\
+             .group_by(Source.source_type)\
+             .all()
+        except Exception:
+            # Handle empty database or missing tables
+            platform_stats = []
         
         platform_data = []
         for stats in platform_stats:
@@ -446,13 +455,17 @@ class PoliticalEngagementAnalyzer:
         Returns:
             Dictionary with viral content analysis
         """
-        viral_messages = db.query(EngagementMetrics, Message, Candidate)\
-                          .join(Message, EngagementMetrics.message_id == Message.id)\
-                          .outerjoin(Candidate, Message.candidate_id == Candidate.id)\
-                          .filter(EngagementMetrics.virality_score >= threshold)\
-                          .order_by(desc(EngagementMetrics.virality_score))\
-                          .limit(20)\
-                          .all()
+        try:
+            viral_messages = db.query(EngagementMetrics, Message, Candidate)\
+                              .join(Message, EngagementMetrics.message_id == Message.id)\
+                              .outerjoin(Candidate, Message.candidate_id == Candidate.id)\
+                              .filter(EngagementMetrics.virality_score >= threshold)\
+                              .order_by(desc(EngagementMetrics.virality_score))\
+                              .limit(20)\
+                              .all()
+        except Exception:
+            # Handle empty database or missing tables
+            viral_messages = []
         
         viral_content = []
         for metrics, message, candidate in viral_messages:
