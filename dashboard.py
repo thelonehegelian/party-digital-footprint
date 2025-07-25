@@ -25,6 +25,14 @@ from src.dashboard.topic_visualizations import (
     create_regional_topics_chart, display_detailed_topics_table,
     create_topic_analysis_controls
 )
+from src.dashboard.engagement_service import EngagementDashboardService
+from src.dashboard.engagement_visualizations import (
+    display_engagement_overview_metrics, create_engagement_distribution_chart,
+    create_platform_performance_chart, create_viral_content_chart,
+    create_engagement_trends_chart, create_candidate_engagement_chart,
+    create_engagement_metrics_comparison, display_top_performing_table,
+    create_engagement_analysis_controls, create_viral_threshold_selector
+)
 
 
 st.set_page_config(
@@ -138,7 +146,7 @@ def main():
         return
     
     # Create tabs for different views
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Overview", "🗳️ Constituencies", "👥 Candidates", "🎭 Sentiment Analysis", "📊 Topic Modeling"])
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📊 Overview", "🗳️ Constituencies", "👥 Candidates", "🎭 Sentiment Analysis", "📊 Topic Modeling", "⚡ Engagement Analytics"])
     
     # Sidebar filters
     st.sidebar.header("Filters")
@@ -928,6 +936,183 @@ def main():
                 with st.spinner("Generating additional topic data..."):
                     with next(get_session()) as db:
                         result = topic_service.generate_dummy_topic_batch(db, limit=analyze_count)
+                    
+                    if result["success"]:
+                        st.success(result["message"])
+                        st.rerun()  # Refresh the dashboard
+                    else:
+                        st.error(result["message"])
+    
+    with tab6:
+        # Engagement Analytics Dashboard
+        st.subheader("⚡ Engagement Analytics Dashboard")
+        
+        # Initialize engagement service
+        engagement_service = EngagementDashboardService()
+        
+        # Get engagement overview
+        with next(get_session()) as db:
+            engagement_overview_data = engagement_service.get_engagement_overview(db)
+        
+        # Display overview metrics
+        display_engagement_overview_metrics(engagement_overview_data)
+        
+        # Check if we have engagement data
+        if engagement_overview_data["needs_analysis"]:
+            st.warning("⚠️ No engagement analysis data found. Generate some test data to explore the dashboard features.")
+            
+            # Show controls for generating test data
+            generate_button, analyze_count = create_engagement_analysis_controls()
+            
+            if generate_button:
+                with st.spinner("Generating dummy engagement data..."):
+                    with next(get_session()) as db:
+                        result = engagement_service.generate_dummy_engagement_batch(db, limit=analyze_count)
+                    
+                    if result["success"]:
+                        st.success(result["message"])
+                        st.rerun()  # Refresh the dashboard
+                    else:
+                        st.error(result["message"])
+        else:
+            # We have engagement data, show visualizations
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.subheader("📊 Engagement Distribution")
+                with next(get_session()) as db:
+                    distribution_data = engagement_service.get_engagement_distribution_data(db)
+                distribution_chart = create_engagement_distribution_chart(distribution_data)
+                st.plotly_chart(distribution_chart, use_container_width=True, key="engagement_distribution_chart")
+            
+            with col2:
+                st.subheader("🏆 Platform Performance")
+                with next(get_session()) as db:
+                    platform_data = engagement_service.get_platform_performance_comparison(db)
+                platform_chart = create_platform_performance_chart(platform_data)
+                st.plotly_chart(platform_chart, use_container_width=True, key="platform_performance_chart")
+            
+            # Engagement metrics overview
+            st.subheader("📈 Engagement Metrics Overview")
+            col1, col2 = st.columns([2, 1])
+            
+            with col1:
+                # Engagement trends over time
+                st.subheader("📅 Engagement Trends Over Time")
+                
+                # Period selector for trends
+                col_a, col_b = st.columns([3, 1])
+                with col_b:
+                    engagement_trend_days = st.selectbox(
+                        "Time Period",
+                        options=[7, 14, 30, 60, 90],
+                        index=2,  # Default to 30 days
+                        key="engagement_trend_days",
+                        help="Select number of days for engagement trend analysis"
+                    )
+                
+                with next(get_session()) as db:
+                    engagement_trends_data = engagement_service.get_engagement_trends_over_time(db, days=engagement_trend_days)
+                engagement_trends_chart = create_engagement_trends_chart(engagement_trends_data)
+                st.plotly_chart(engagement_trends_chart, use_container_width=True, key="engagement_trends_chart")
+            
+            with col2:
+                # Metrics comparison radar chart
+                metrics_comparison_chart = create_engagement_metrics_comparison(engagement_overview_data)
+                st.plotly_chart(metrics_comparison_chart, use_container_width=True, key="engagement_metrics_comparison")
+            
+            # Viral content analysis
+            st.subheader("🔥 Viral Content Analysis")
+            col1, col2 = st.columns([3, 1])
+            
+            with col2:
+                viral_threshold = create_viral_threshold_selector()
+            
+            with col1:
+                with next(get_session()) as db:
+                    viral_data = engagement_service.get_viral_content_analysis(db, threshold=viral_threshold)
+                viral_chart = create_viral_content_chart(viral_data)
+                st.plotly_chart(viral_chart, use_container_width=True, key="viral_content_chart")
+                
+                if viral_data["viral_content"]:
+                    st.write(f"**Found {viral_data['viral_messages_found']} viral messages above threshold {viral_threshold}**")
+                else:
+                    st.info(f"No viral content found above threshold {viral_threshold}. Try lowering the threshold.")
+            
+            # Candidate engagement analysis
+            st.subheader("👥 Candidate Engagement Performance")
+            with next(get_session()) as db:
+                candidate_engagement_df = engagement_service.get_candidate_engagement_analysis(db, limit=15)
+            
+            if not candidate_engagement_df.empty:
+                col1, col2 = st.columns([2, 1])
+                
+                with col1:
+                    candidate_engagement_chart = create_candidate_engagement_chart(candidate_engagement_df)
+                    st.plotly_chart(candidate_engagement_chart, use_container_width=True, key="candidate_engagement_chart")
+                
+                with col2:
+                    st.write("**Top Candidates by Engagement:**")
+                    top_candidates = candidate_engagement_df.head(5)
+                    candidate_summary = []
+                    for _, candidate in top_candidates.iterrows():
+                        candidate_summary.append({
+                            'Candidate': candidate['candidate_name'],
+                            'Messages': candidate['message_count'],
+                            'Engagement': f"{candidate['avg_engagement']:.3f}",
+                            'Viral Content': candidate['viral_content']
+                        })
+                    
+                    if candidate_summary:
+                        candidate_summary_df = pd.DataFrame(candidate_summary)
+                        st.dataframe(candidate_summary_df, use_container_width=True, hide_index=True)
+            else:
+                st.info("No candidate engagement data available")
+            
+            # Top performing messages
+            st.subheader("🏅 Top Performing Messages")
+            
+            # Metric selector
+            col1, col2, col3 = st.columns([2, 1, 1])
+            
+            with col1:
+                performance_metric = st.selectbox(
+                    "Rank by Metric",
+                    options=["engagement", "virality", "influence"],
+                    format_func=lambda x: x.title(),
+                    help="Select metric to rank messages by"
+                )
+            
+            with col2:
+                message_limit = st.number_input(
+                    "Number of Messages",
+                    min_value=5,
+                    max_value=50,
+                    value=10,
+                    key="engagement_message_limit",
+                    help="Number of top messages to display"
+                )
+            
+            with col3:
+                st.write("")  # Spacer
+            
+            with next(get_session()) as db:
+                top_messages_df = engagement_service.get_top_performing_messages(
+                    db, 
+                    metric=performance_metric, 
+                    limit=message_limit
+                )
+            
+            display_top_performing_table(top_messages_df, performance_metric)
+            
+            # Analysis controls at the bottom
+            st.markdown("---")
+            generate_button, analyze_count = create_engagement_analysis_controls()
+            
+            if generate_button:
+                with st.spinner("Generating additional engagement data..."):
+                    with next(get_session()) as db:
+                        result = engagement_service.generate_dummy_engagement_batch(db, limit=analyze_count)
                     
                     if result["success"]:
                         st.success(result["message"])
