@@ -17,6 +17,14 @@ from src.dashboard.sentiment_visualizations import (
     create_emotion_analysis_chart, display_detailed_messages_table,
     create_sentiment_analysis_controls
 )
+from src.dashboard.topic_service import TopicDashboardService
+from src.dashboard.topic_visualizations import (
+    display_topic_overview_metrics, create_topic_distribution_chart,
+    create_trending_topics_chart, create_topic_trends_chart,
+    create_candidate_topics_chart, create_topic_coherence_chart,
+    create_regional_topics_chart, display_detailed_topics_table,
+    create_topic_analysis_controls
+)
 
 
 st.set_page_config(
@@ -130,7 +138,7 @@ def main():
         return
     
     # Create tabs for different views
-    tab1, tab2, tab3, tab4 = st.tabs(["📊 Overview", "🗳️ Constituencies", "👥 Candidates", "🎭 Sentiment Analysis"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Overview", "🗳️ Constituencies", "👥 Candidates", "🎭 Sentiment Analysis", "📊 Topic Modeling"])
     
     # Sidebar filters
     st.sidebar.header("Filters")
@@ -665,6 +673,261 @@ def main():
                 with st.spinner("Generating additional sentiment data..."):
                     with next(get_session()) as db:
                         result = sentiment_service.generate_dummy_sentiment_batch(db, limit=analyze_count)
+                    
+                    if result["success"]:
+                        st.success(result["message"])
+                        st.rerun()  # Refresh the dashboard
+                    else:
+                        st.error(result["message"])
+    
+    with tab5:
+        # Topic Modeling Dashboard
+        st.subheader("📊 Topic Modeling Dashboard")
+        
+        # Initialize topic service
+        topic_service = TopicDashboardService()
+        
+        # Get topic overview
+        with next(get_session()) as db:
+            topic_overview_data = topic_service.get_topic_overview(db)
+        
+        # Display overview metrics
+        display_topic_overview_metrics(topic_overview_data)
+        
+        # Check if we have topic data
+        if topic_overview_data["needs_analysis"]:
+            st.warning("⚠️ No topic modeling data found. Generate some test data to explore the dashboard features.")
+            
+            # Show controls for generating test data
+            generate_button, analyze_count = create_topic_analysis_controls()
+            
+            if generate_button:
+                with st.spinner("Generating dummy topic data..."):
+                    with next(get_session()) as db:
+                        result = topic_service.generate_dummy_topic_batch(db, limit=analyze_count)
+                    
+                    if result["success"]:
+                        st.success(result["message"])
+                        st.rerun()  # Refresh the dashboard
+                    else:
+                        st.error(result["message"])
+        else:
+            # We have topic data, show visualizations
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.subheader("🥧 Topic Distribution")
+                with next(get_session()) as db:
+                    distribution_data = topic_service.get_topic_distribution_data(db)
+                distribution_chart = create_topic_distribution_chart(distribution_data)
+                st.plotly_chart(distribution_chart, use_container_width=True)
+            
+            with col2:
+                st.subheader("🔥 Trending Topics")
+                with next(get_session()) as db:
+                    trending_data = topic_service.get_trending_topics(db, days=7, limit=8)
+                trending_chart = create_trending_topics_chart(trending_data)
+                st.plotly_chart(trending_chart, use_container_width=True)
+            
+            # Topic trends over time
+            st.subheader("📈 Topic Activity Over Time")
+            
+            # Period selector for trends
+            col1, col2 = st.columns([3, 1])
+            with col2:
+                topic_trend_days = st.selectbox(
+                    "Time Period",
+                    options=[7, 14, 30, 60, 90],
+                    index=2,  # Default to 30 days
+                    key="topic_trend_days",
+                    help="Select number of days for topic trend analysis"
+                )
+            
+            with next(get_session()) as db:
+                topic_trends_data = topic_service.get_topic_trends_over_time(db, days=topic_trend_days)
+            topic_trends_chart = create_topic_trends_chart(topic_trends_data)
+            st.plotly_chart(topic_trends_chart, use_container_width=True)
+            
+            # Candidate and regional analysis
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.subheader("👥 Candidate Topic Analysis")
+                with next(get_session()) as db:
+                    candidate_topics_data = topic_service.get_candidate_topic_analysis(db, limit=10)
+                
+                if candidate_topics_data["candidate_topic_analysis"]:
+                    candidate_topics_chart = create_candidate_topics_chart(candidate_topics_data)
+                    st.plotly_chart(candidate_topics_chart, use_container_width=True)
+                    
+                    # Show top candidates table
+                    st.write("**Top Candidates by Topic Diversity:**")
+                    candidate_summary = []
+                    for candidate in candidate_topics_data["candidate_topic_analysis"][:5]:
+                        candidate_summary.append({
+                            'Candidate': candidate['candidate_name'],
+                            'Messages': candidate['total_messages'],
+                            'Topics': candidate['topic_diversity'],
+                            'Top Topic': candidate['top_topics'][0]['topic_name'] if candidate['top_topics'] else 'None'
+                        })
+                    
+                    if candidate_summary:
+                        candidate_df = pd.DataFrame(candidate_summary)
+                        st.dataframe(candidate_df, use_container_width=True, hide_index=True)
+                else:
+                    st.info("No candidate topic data available")
+            
+            with col2:
+                st.subheader("🗺️ Regional Topic Analysis")
+                with next(get_session()) as db:
+                    regional_topics_df = topic_service.get_regional_topic_analysis(db)
+                
+                if not regional_topics_df.empty:
+                    regional_topics_chart = create_regional_topics_chart(regional_topics_df)
+                    st.plotly_chart(regional_topics_chart, use_container_width=True)
+                    
+                    # Show regional summary table
+                    st.write("**Regional Topic Summary:**")
+                    regional_summary = regional_topics_df.groupby('region').agg({
+                        'message_count': 'sum',
+                        'topic_name': 'nunique'
+                    }).rename(columns={'topic_name': 'unique_topics'}).reset_index()
+                    regional_summary.columns = ['Region', 'Total Messages', 'Unique Topics']
+                    st.dataframe(regional_summary, use_container_width=True, hide_index=True)
+                else:
+                    st.info("No regional topic data available")
+            
+            # Topic quality analysis
+            st.subheader("🎯 Topic Quality Analysis")
+            with next(get_session()) as db:
+                coherence_data = topic_service.get_topic_coherence_analysis(db)
+            
+            col1, col2 = st.columns([2, 1])
+            
+            with col1:
+                coherence_chart = create_topic_coherence_chart(coherence_data)
+                st.plotly_chart(coherence_chart, use_container_width=True)
+            
+            with col2:
+                if coherence_data["coherence_data"]:
+                    st.write("**Quality Distribution:**")
+                    quality_dist = coherence_data["quality_distribution"]
+                    quality_summary = pd.DataFrame([
+                        {'Quality': 'High (≥0.7)', 'Count': quality_dist['high']},
+                        {'Quality': 'Medium (0.5-0.7)', 'Count': quality_dist['medium']},
+                        {'Quality': 'Low (<0.5)', 'Count': quality_dist['low']}
+                    ])
+                    st.dataframe(quality_summary, use_container_width=True, hide_index=True)
+                    
+                    avg_coherence = coherence_data["avg_coherence"]
+                    st.metric(
+                        "Average Coherence", 
+                        f"{avg_coherence:.3f}",
+                        help="Higher scores indicate better topic quality"
+                    )
+                else:
+                    st.info("No coherence data available")
+            
+            # Topic-sentiment correlation
+            st.subheader("🎭 Topic-Sentiment Correlation")
+            with next(get_session()) as db:
+                topic_sentiment_data = topic_service.get_topic_sentiment_analysis(db)
+            
+            if topic_sentiment_data["topic_sentiment_analysis"]:
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    # Create a simple correlation chart
+                    sentiment_correlation = []
+                    for topic in topic_sentiment_data["topic_sentiment_analysis"]:
+                        sentiment_correlation.append({
+                            'Topic': topic['topic_name'][:30] + "..." if len(topic['topic_name']) > 30 else topic['topic_name'],
+                            'Avg Sentiment': topic['avg_sentiment'],
+                            'Messages': topic['analyzed_messages']
+                        })
+                    
+                    if sentiment_correlation:
+                        corr_df = pd.DataFrame(sentiment_correlation)
+                        fig_corr = px.scatter(
+                            corr_df,
+                            x='Avg Sentiment',
+                            y='Topic',
+                            size='Messages',
+                            title="Topic Sentiment Correlation",
+                            labels={'Avg Sentiment': 'Average Sentiment Score'},
+                            color='Avg Sentiment',
+                            color_continuous_scale='RdYlGn'
+                        )
+                        fig_corr.update_layout(height=400)
+                        st.plotly_chart(fig_corr, use_container_width=True)
+                
+                with col2:
+                    st.write("**Topic-Sentiment Summary:**")
+                    sentiment_summary = []
+                    for topic in topic_sentiment_data["topic_sentiment_analysis"][:5]:
+                        sentiment_summary.append({
+                            'Topic': topic['topic_name'][:25] + "..." if len(topic['topic_name']) > 25 else topic['topic_name'],
+                            'Sentiment': f"{topic['avg_sentiment']:.3f}",
+                            'Positive %': f"{topic['positive_pct']:.1f}%"
+                        })
+                    
+                    if sentiment_summary:
+                        sentiment_df = pd.DataFrame(sentiment_summary)
+                        st.dataframe(sentiment_df, use_container_width=True, hide_index=True)
+            else:
+                st.info("No topic-sentiment correlation data available. Generate sentiment analysis data first.")
+            
+            # Detailed messages with topics
+            st.subheader("📝 Messages with Topic Classification")
+            
+            # Filters for detailed messages
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                # Get available topics for filter
+                with next(get_session()) as db:
+                    all_topics_data = topic_service.get_topic_distribution_data(db)
+                topic_names = ["All"] + [topic["topic_name"] for topic in all_topics_data["topics"]]
+                
+                topic_filter = st.selectbox(
+                    "Filter by Topic",
+                    options=topic_names,
+                    help="Filter messages by topic classification"
+                )
+            
+            with col2:
+                st.write("")  # Spacer
+            
+            with col3:
+                topic_message_limit = st.number_input(
+                    "Number of Messages",
+                    min_value=5,
+                    max_value=50,
+                    value=20,
+                    key="topic_message_limit",
+                    help="Number of messages to display"
+                )
+            
+            # Apply filters
+            topic_filter_val = None if topic_filter == "All" else topic_filter
+            
+            with next(get_session()) as db:
+                detailed_topic_messages = topic_service.get_detailed_messages_with_topics(
+                    db,
+                    limit=topic_message_limit,
+                    topic_filter=topic_filter_val
+                )
+            
+            display_detailed_topics_table(detailed_topic_messages, show_topics=True)
+            
+            # Analysis controls at the bottom
+            st.markdown("---")
+            generate_button, analyze_count = create_topic_analysis_controls()
+            
+            if generate_button:
+                with st.spinner("Generating additional topic data..."):
+                    with next(get_session()) as db:
+                        result = topic_service.generate_dummy_topic_batch(db, limit=analyze_count)
                     
                     if result["success"]:
                         st.success(result["message"])
