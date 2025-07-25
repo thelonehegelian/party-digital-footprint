@@ -335,3 +335,62 @@ class EngagementTrendsResponse(BaseModel):
     daily_data: Dict[str, Dict[str, Any]] = Field(description="Daily engagement data")
     trends_summary: Dict[str, Any] = Field(description="Engagement trends summary")
     analysis_date: str
+
+
+# ===== INTELLIGENCE REPORT SCHEMAS =====
+
+class ReportGenerationRequest(BaseModel):
+    """Request schema for intelligence report generation."""
+    report_type: str = Field(description="Type of report to generate")
+    time_period_days: int = Field(default=7, ge=1, le=365, description="Number of days to analyze")
+    entity_filter: Optional[Dict[str, Any]] = Field(default=None, description="Optional filters")
+    export_format: str = Field(default="json", description="Export format (json, markdown)")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "report_type": "weekly_summary",
+                "time_period_days": 7,
+                "entity_filter": {"source_type": "twitter"},
+                "export_format": "markdown"
+            }
+        }
+
+
+class ReportSectionResponse(BaseModel):
+    """Response schema for report section."""
+    title: str
+    content: str
+    data: Dict[str, Any] = Field(description="Section data")
+    visualizations: List[str] = Field(description="Suggested visualizations")
+    priority: str = Field(description="Section priority level")
+
+
+class IntelligenceReportResponse(BaseModel):
+    """Response schema for intelligence report."""
+    report_id: str
+    report_type: str
+    title: str
+    executive_summary: str
+    generated_at: datetime
+    time_period: Dict[str, str] = Field(description="Analysis time period")
+    sections: List[ReportSectionResponse] = Field(description="Report sections")
+    metadata: Dict[str, Any] = Field(description="Report metadata")
+    recommendations: List[str] = Field(description="Actionable recommendations")
+    data_sources: List[str] = Field(description="Data sources used")
+
+
+class ReportListResponse(BaseModel):
+    """Response schema for report listing."""
+    reports: List[Dict[str, Any]] = Field(description="Available reports")
+    total_reports: int
+    report_types: List[str] = Field(description="Available report types")
+
+
+class ReportExportResponse(BaseModel):
+    """Response schema for report export."""
+    report_id: str
+    export_format: str
+    content: str = Field(description="Exported report content")
+    filename: str = Field(description="Suggested filename")
+    generated_at: datetime

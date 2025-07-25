@@ -13,6 +13,7 @@ from ..nlp.processor import BasicNLPProcessor
 from ..analytics.sentiment import PoliticalSentimentAnalyzer
 from ..analytics.topics import PoliticalTopicAnalyzer
 from ..analytics.engagement import PoliticalEngagementAnalyzer
+from ..analytics.intelligence import IntelligenceReportGenerator, ReportType
 from .schemas import (
     MessageInput, BulkMessageInput, MessageResponse, 
     BulkMessageResponse, ErrorResponse, SentimentAnalysisRequest,
@@ -21,7 +22,9 @@ from .schemas import (
     TrendingTopicsResponse, TopicTrendsResponse, CandidateTopicsResponse,
     TopicSentimentResponse, EngagementAnalysisRequest, EngagementAnalysisResponse,
     EngagementBatchResponse, EngagementOverviewResponse, PlatformPerformanceResponse,
-    ViralContentResponse, CandidateEngagementResponse, EngagementTrendsResponse
+    ViralContentResponse, CandidateEngagementResponse, EngagementTrendsResponse,
+    ReportGenerationRequest, IntelligenceReportResponse, ReportListResponse,
+    ReportExportResponse, ReportSectionResponse
 )
 
 router = APIRouter(prefix="/api/v1", tags=["messages"])
@@ -32,6 +35,7 @@ nlp_processor.load_model()
 sentiment_analyzer = PoliticalSentimentAnalyzer()
 topic_analyzer = PoliticalTopicAnalyzer()
 engagement_analyzer = PoliticalEngagementAnalyzer()
+intelligence_generator = IntelligenceReportGenerator()
 
 
 def get_or_create_source(db: Session, source_name: str, source_type: str, source_url: str = None) -> Source:
@@ -1477,4 +1481,413 @@ async def get_viral_content(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error retrieving viral content: {str(e)}"
+        )
+
+
+@router.get("/analytics/engagement/candidates", response_model=CandidateEngagementResponse)
+async def get_candidate_engagement(
+    limit: int = Query(20, ge=1, le=100, description="Maximum candidates to analyze"),
+    db: Session = Depends(get_session)
+):
+    """Get engagement analysis by candidate."""
+    try:
+        candidate_data = engagement_analyzer.get_candidate_engagement_analysis(db, limit)
+        
+        return CandidateEngagementResponse(
+            candidate_engagement_analysis=candidate_data["candidate_engagement_analysis"],
+            total_candidates_analyzed=candidate_data["total_candidates_analyzed"],
+            analysis_date=datetime.now().isoformat()
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting candidate engagement: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving candidate engagement: {str(e)}"
+        )
+
+
+@router.get("/analytics/engagement/trends", response_model=EngagementTrendsResponse)
+async def get_engagement_trends(
+    days: int = Query(30, ge=1, le=365, description="Number of days to analyze"),
+    db: Session = Depends(get_session)
+):
+    """Get engagement trends over time."""
+    try:
+        trends_data = engagement_analyzer.get_engagement_trends_over_time(db, days)
+        
+        return EngagementTrendsResponse(
+            time_period_days=trends_data["time_period_days"],
+            daily_data=trends_data["daily_data"],
+            trends_summary=trends_data["trends_summary"],
+            analysis_date=datetime.now().isoformat()
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting engagement trends: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving engagement trends: {str(e)}"
+        )
+
+
+# ===== INTELLIGENCE REPORT ENDPOINTS =====
+
+@router.post("/analytics/reports/generate", response_model=IntelligenceReportResponse)
+async def generate_intelligence_report(
+    request: ReportGenerationRequest,
+    db: Session = Depends(get_session)
+):
+    """
+    Generate comprehensive intelligence reports combining all analytics.
+    
+    Creates multi-source intelligence reports with:
+    - Sentiment, topic, and engagement analysis integration
+    - Multiple report types (daily_brief, weekly_summary, etc.)
+    - Time-based filtering and analysis
+    - Executive summaries and actionable recommendations
+    - Export capabilities in JSON and Markdown formats
+    
+    **Report Types:**
+    - `daily_brief`: Focused daily intelligence summary
+    - `weekly_summary`: Comprehensive weekly analysis
+    - `monthly_analysis`: Extended monthly intelligence report
+    - `campaign_overview`: Complete campaign messaging analysis
+    - `candidate_profile`: Individual candidate focus analysis
+    - `issue_tracker`: Topic-specific messaging tracking
+    - `comparative_analysis`: Multi-entity comparison report
+    
+    **Parameters:**
+    - `report_type`: Type of intelligence report to generate
+    - `time_period_days`: Analysis period (1-365 days)
+    - `entity_filter` (optional): Filter by candidate_id, source_type, etc.
+    - `export_format`: Output format (json, markdown)
+    
+    **Returns:**
+    - Complete intelligence report with executive summary
+    - Multi-section analysis breakdown
+    - Actionable recommendations
+    - Data sources and methodology information
+    """
+    try:
+        # Validate report type
+        try:
+            report_type_enum = ReportType(request.report_type)
+        except ValueError:
+            valid_types = [rt.value for rt in ReportType]
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid report_type. Must be one of: {', '.join(valid_types)}"
+            )
+        
+        # Generate the intelligence report
+        report = intelligence_generator.generate_report(
+            db=db,
+            report_type=report_type_enum,
+            time_period_days=request.time_period_days,
+            entity_filter=request.entity_filter
+        )
+        
+        # Convert sections to response format
+        response_sections = []
+        for section in report.sections:
+            response_sections.append(ReportSectionResponse(
+                title=section.title,
+                content=section.content,
+                data=section.data,
+                visualizations=section.visualizations,
+                priority=section.priority
+            ))
+        
+        # Format time period for response
+        time_period_formatted = {
+            "start": report.time_period["start"].isoformat(),
+            "end": report.time_period["end"].isoformat()
+        }
+        
+        return IntelligenceReportResponse(
+            report_id=report.report_id,
+            report_type=report.report_type.value,
+            title=report.title,
+            executive_summary=report.executive_summary,
+            generated_at=report.generated_at,
+            time_period=time_period_formatted,
+            sections=response_sections,
+            metadata=report.metadata,
+            recommendations=report.recommendations,
+            data_sources=report.data_sources
+        )
+        
+    except HTTPException:
+        # Re-raise validation errors
+        raise
+    except Exception as e:
+        logger.error(f"Error generating intelligence report: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generating intelligence report: {str(e)}"
+        )
+
+
+@router.get("/analytics/reports/list", response_model=ReportListResponse)
+async def list_intelligence_reports(
+    report_type: Optional[str] = Query(None, description="Filter by report type"),
+    limit: int = Query(50, ge=1, le=200, description="Maximum reports to return"),
+    db: Session = Depends(get_session)
+):
+    """
+    List available intelligence reports.
+    
+    Returns information about previously generated intelligence reports:
+    - Report metadata and generation timestamps
+    - Report type and time period information
+    - Executive summary previews
+    - Available export formats
+    
+    **Parameters:**
+    - `report_type` (optional): Filter by specific report type
+    - `limit`: Maximum number of reports to return
+    
+    **Returns:**
+    - List of available reports with metadata
+    - Report type information and statistics
+    - Summary data for quick reference
+    
+    Note: This endpoint currently provides a simulated response since report 
+    persistence is not implemented in the current version.
+    """
+    try:
+        # For now, return example data as report persistence is not implemented
+        # In a full implementation, this would query a reports table
+        
+        available_report_types = [rt.value for rt in ReportType]
+        
+        # Generate some example report metadata
+        example_reports = []
+        for i, report_type_value in enumerate(available_report_types[:limit]):
+            example_reports.append({
+                "report_id": f"{report_type_value}_{datetime.now().strftime('%Y%m%d')}_{i:03d}",
+                "report_type": report_type_value,
+                "title": f"{report_type_value.replace('_', ' ').title()} Report",
+                "generated_at": (datetime.now() - timedelta(days=i)).isoformat(),
+                "time_period_days": 7 if "daily" in report_type_value else 30,
+                "summary": f"Generated {report_type_value} intelligence report with multi-source analytics.",
+                "data_sources": ["sentiment_analysis", "topic_modeling", "engagement_metrics"],
+                "sections_count": 4 + (i % 3),
+                "export_formats": ["json", "markdown"]
+            })
+        
+        # Filter by report type if specified
+        if report_type:
+            example_reports = [r for r in example_reports if r["report_type"] == report_type]
+        
+        return ReportListResponse(
+            reports=example_reports,
+            total_reports=len(example_reports),
+            report_types=available_report_types
+        )
+        
+    except Exception as e:
+        logger.error(f"Error listing intelligence reports: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving intelligence reports list: {str(e)}"
+        )
+
+
+@router.get("/analytics/reports/{report_id}", response_model=IntelligenceReportResponse)
+async def get_intelligence_report(
+    report_id: str,
+    db: Session = Depends(get_session)
+):
+    """
+    Retrieve a specific intelligence report by ID.
+    
+    Returns the complete intelligence report including:
+    - Full report content and sections
+    - Executive summary and recommendations
+    - Analysis metadata and data sources
+    - Generation timestamp and parameters
+    
+    **Parameters:**
+    - `report_id`: Unique identifier for the intelligence report
+    
+    **Returns:**
+    - Complete intelligence report data
+    - All sections with analysis content
+    - Recommendations and insights
+    - Report metadata
+    
+    **Errors:**
+    - `404`: Report not found
+    
+    Note: This endpoint currently regenerates reports as report persistence 
+    is not implemented in the current version.
+    """
+    try:
+        # Parse report ID to extract type and parameters
+        # Format: {report_type}_{date}_{sequence}
+        parts = report_id.split('_')
+        if len(parts) < 2:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid report_id format"
+            )
+        
+        report_type_str = '_'.join(parts[:-2]) if len(parts) > 2 else parts[0]
+        
+        try:
+            report_type_enum = ReportType(report_type_str)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Report not found"
+            )
+        
+        # For demonstration, regenerate the report
+        # In a full implementation, this would retrieve from storage
+        report = intelligence_generator.generate_report(
+            db=db,
+            report_type=report_type_enum,
+            time_period_days=7,  # Default parameters
+            entity_filter=None
+        )
+        
+        # Override report ID to match requested
+        report.report_id = report_id
+        
+        # Convert sections to response format
+        response_sections = []
+        for section in report.sections:
+            response_sections.append(ReportSectionResponse(
+                title=section.title,
+                content=section.content,
+                data=section.data,
+                visualizations=section.visualizations,
+                priority=section.priority
+            ))
+        
+        # Format time period for response
+        time_period_formatted = {
+            "start": report.time_period["start"].isoformat(),
+            "end": report.time_period["end"].isoformat()
+        }
+        
+        return IntelligenceReportResponse(
+            report_id=report.report_id,
+            report_type=report.report_type.value,
+            title=report.title,
+            executive_summary=report.executive_summary,
+            generated_at=report.generated_at,
+            time_period=time_period_formatted,
+            sections=response_sections,
+            metadata=report.metadata,
+            recommendations=report.recommendations,
+            data_sources=report.data_sources
+        )
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving intelligence report {report_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving intelligence report: {str(e)}"
+        )
+
+
+@router.get("/analytics/reports/{report_id}/export", response_model=ReportExportResponse)
+async def export_intelligence_report(
+    report_id: str,
+    format: str = Query("json", description="Export format: json or markdown"),
+    db: Session = Depends(get_session)
+):
+    """
+    Export intelligence report in specified format.
+    
+    Exports complete intelligence reports with:
+    - JSON format for programmatic access and integration
+    - Markdown format for documentation and sharing
+    - Formatted content with proper structure
+    - Metadata and generation information
+    
+    **Parameters:**
+    - `report_id`: Unique identifier for the intelligence report
+    - `format`: Export format (json, markdown)
+    
+    **Returns:**
+    - Exported report content in requested format
+    - Suggested filename for download
+    - Export metadata and timing
+    
+    **Supported Formats:**
+    - `json`: Structured JSON data for API integration
+    - `markdown`: Formatted Markdown for documentation
+    
+    **Errors:**
+    - `404`: Report not found
+    - `400`: Invalid export format
+    """
+    try:
+        # Validate export format
+        if format not in ["json", "markdown"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid export format. Must be 'json' or 'markdown'"
+            )
+        
+        # Parse report ID to extract type and parameters
+        parts = report_id.split('_')
+        if len(parts) < 2:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid report_id format"
+            )
+        
+        report_type_str = '_'.join(parts[:-2]) if len(parts) > 2 else parts[0]
+        
+        try:
+            report_type_enum = ReportType(report_type_str)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Report not found"
+            )
+        
+        # Generate the report (in full implementation, retrieve from storage)
+        report = intelligence_generator.generate_report(
+            db=db,
+            report_type=report_type_enum,
+            time_period_days=7,
+            entity_filter=None
+        )
+        
+        # Override report ID to match requested
+        report.report_id = report_id
+        
+        # Export in requested format
+        if format == "json":
+            content = intelligence_generator.export_report_json(report)
+            filename = f"{report_id}.json"
+        else:  # markdown
+            content = intelligence_generator.export_report_markdown(report)
+            filename = f"{report_id}.md"
+        
+        return ReportExportResponse(
+            report_id=report_id,
+            export_format=format,
+            content=content,
+            filename=filename,
+            generated_at=datetime.now()
+        )
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        logger.error(f"Error exporting intelligence report {report_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error exporting intelligence report: {str(e)}"
         )
