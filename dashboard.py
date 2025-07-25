@@ -720,14 +720,14 @@ def main():
                 with next(get_session()) as db:
                     distribution_data = topic_service.get_topic_distribution_data(db)
                 distribution_chart = create_topic_distribution_chart(distribution_data)
-                st.plotly_chart(distribution_chart, use_container_width=True)
+                st.plotly_chart(distribution_chart, use_container_width=True, key="topic_distribution_chart")
             
             with col2:
                 st.subheader("🔥 Trending Topics")
                 with next(get_session()) as db:
                     trending_data = topic_service.get_trending_topics(db, days=7, limit=8)
                 trending_chart = create_trending_topics_chart(trending_data)
-                st.plotly_chart(trending_chart, use_container_width=True)
+                st.plotly_chart(trending_chart, use_container_width=True, key="trending_topics_chart")
             
             # Topic trends over time
             st.subheader("📈 Topic Activity Over Time")
@@ -746,7 +746,7 @@ def main():
             with next(get_session()) as db:
                 topic_trends_data = topic_service.get_topic_trends_over_time(db, days=topic_trend_days)
             topic_trends_chart = create_topic_trends_chart(topic_trends_data)
-            st.plotly_chart(topic_trends_chart, use_container_width=True)
+            st.plotly_chart(topic_trends_chart, use_container_width=True, key="topic_trends_chart")
             
             # Candidate and regional analysis
             col1, col2 = st.columns(2)
@@ -758,7 +758,7 @@ def main():
                 
                 if candidate_topics_data["candidate_topic_analysis"]:
                     candidate_topics_chart = create_candidate_topics_chart(candidate_topics_data)
-                    st.plotly_chart(candidate_topics_chart, use_container_width=True)
+                    st.plotly_chart(candidate_topics_chart, use_container_width=True, key="candidate_topics_chart")
                     
                     # Show top candidates table
                     st.write("**Top Candidates by Topic Diversity:**")
@@ -784,7 +784,7 @@ def main():
                 
                 if not regional_topics_df.empty:
                     regional_topics_chart = create_regional_topics_chart(regional_topics_df)
-                    st.plotly_chart(regional_topics_chart, use_container_width=True)
+                    st.plotly_chart(regional_topics_chart, use_container_width=True, key="regional_topics_chart")
                     
                     # Show regional summary table
                     st.write("**Regional Topic Summary:**")
@@ -806,7 +806,7 @@ def main():
             
             with col1:
                 coherence_chart = create_topic_coherence_chart(coherence_data)
-                st.plotly_chart(coherence_chart, use_container_width=True)
+                st.plotly_chart(coherence_chart, use_container_width=True, key="topic_coherence_chart")
             
             with col2:
                 if coherence_data["coherence_data"]:
@@ -859,7 +859,7 @@ def main():
                             color_continuous_scale='RdYlGn'
                         )
                         fig_corr.update_layout(height=400)
-                        st.plotly_chart(fig_corr, use_container_width=True)
+                        st.plotly_chart(fig_corr, use_container_width=True, key="topic_sentiment_correlation_chart")
                 
                 with col2:
                     st.write("**Topic-Sentiment Summary:**")
