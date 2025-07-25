@@ -1,147 +1,23 @@
 [
   {
-    "url": "https://twitter.com/reformdanielyoung/status/1719101880909603596",
-    "title": "Daniel Young - Economy Message",
-    "content": "As your Reform UK candidate for Birmingham Edgbaston, I believe our economy is being held back by excessive regulation and high taxes.",
-    "published_date": "2024-03-07",
-    "author": "Daniel Young",
+    "url": "https://twitter.com/barbaraperez79/status/1750777903545356610",
+    "title": "Barbara Perez - Local Issues Message",
+    "content": "As your Reform UK candidate for Birmingham Edgbaston, I believe planning decisions should be made locally, not by distant bureaucrats.",
+    "published_date": "2024-04-08",
+    "author": "Barbara Perez",
     "source_type": "twitter",
-    "source_name": "Daniel Young Twitter",
+    "source_name": "Barbara Perez Twitter",
     "platform": "twitter",
     "candidate_id": 1,
     "geographic_scope": "local",
     "engagement_metrics": {
-      "views": 894,
-      "shares": 85,
-      "likes": 74,
-      "comments": 28
+      "views": 1441,
+      "shares": 92,
+      "likes": 90,
+      "comments": 12
     },
     "raw_data": {
-      "candidate_name": "Daniel Young",
-      "constituency": "Birmingham Edgbaston",
-      "theme": "economy",
-      "message_type": "candidate_tweet"
-    },
-    "keywords": [
-      "economy",
-      "birmingham",
-      "reform uk",
-      "candidate"
-    ],
-    "issue_category": "economy"
-  },
-  {
-    "url": "https://twitter.com/reformdanielyoung/status/1780217766959803194",
-    "title": "Daniel Young - Net Zero Message",
-    "content": "I'm fighting for Birmingham Edgbaston because common sense energy policy means affordable bills for everyone.",
-    "published_date": "2024-03-20",
-    "author": "Daniel Young",
-    "source_type": "twitter",
-    "source_name": "Daniel Young Twitter",
-    "platform": "twitter",
-    "candidate_id": 1,
-    "geographic_scope": "local",
-    "engagement_metrics": {
-      "views": 4519,
-      "shares": 23,
-      "likes": 146,
-      "comments": 19
-    },
-    "raw_data": {
-      "candidate_name": "Daniel Young",
-      "constituency": "Birmingham Edgbaston",
-      "theme": "net_zero",
-      "message_type": "candidate_tweet"
-    },
-    "keywords": [
-      "net zero",
-      "birmingham",
-      "reform uk",
-      "candidate"
-    ],
-    "issue_category": "net_zero"
-  },
-  {
-    "url": "https://twitter.com/reformdanielyoung/status/1789934188151210559",
-    "title": "Daniel Young - Brexit Message",
-    "content": "As your Reform UK candidate for Birmingham Edgbaston, I believe we must deliver the brexit that people voted for - true independence from eu control.",
-    "published_date": "2024-04-04",
-    "author": "Daniel Young",
-    "source_type": "twitter",
-    "source_name": "Daniel Young Twitter",
-    "platform": "twitter",
-    "candidate_id": 1,
-    "geographic_scope": "local",
-    "engagement_metrics": {
-      "views": 2877,
-      "shares": 8,
-      "likes": 53,
-      "comments": 9
-    },
-    "raw_data": {
-      "candidate_name": "Daniel Young",
-      "constituency": "Birmingham Edgbaston",
-      "theme": "brexit",
-      "message_type": "candidate_tweet"
-    },
-    "keywords": [
-      "brexit",
-      "birmingham",
-      "reform uk",
-      "candidate"
-    ],
-    "issue_category": "brexit"
-  },
-  {
-    "url": "https://twitter.com/reformdanielyoung/status/1720071637807299383",
-    "title": "Daniel Young - Brexit Message",
-    "content": "Here in Birmingham Edgbaston, we must deliver the brexit that people voted for - true independence from eu control.",
-    "published_date": "2024-03-21",
-    "author": "Daniel Young",
-    "source_type": "twitter",
-    "source_name": "Daniel Young Twitter",
-    "platform": "twitter",
-    "candidate_id": 1,
-    "geographic_scope": "local",
-    "engagement_metrics": {
-      "views": 488,
-      "shares": 76,
-      "likes": 91,
-      "comments": 42
-    },
-    "raw_data": {
-      "candidate_name": "Daniel Young",
-      "constituency": "Birmingham Edgbaston",
-      "theme": "brexit",
-      "message_type": "candidate_tweet"
-    },
-    "keywords": [
-      "brexit",
-      "birmingham",
-      "reform uk",
-      "candidate"
-    ],
-    "issue_category": "brexit"
-  },
-  {
-    "url": "https://twitter.com/reformdanielyoung/status/1765410480152406200",
-    "title": "Daniel Young - Local Issues Message",
-    "content": "The people of Birmingham Edgbaston deserve better. Planning decisions should be made locally, not by distant bureaucrats.",
-    "published_date": "2024-04-16",
-    "author": "Daniel Young",
-    "source_type": "twitter",
-    "source_name": "Daniel Young Twitter",
-    "platform": "twitter",
-    "candidate_id": 1,
-    "geographic_scope": "local",
-    "engagement_metrics": {
-      "views": 270,
-      "shares": 71,
-      "likes": 58,
-      "comments": 18
-    },
-    "raw_data": {
-      "candidate_name": "Daniel Young",
+      "candidate_name": "Barbara Perez",
       "constituency": "Birmingham Edgbaston",
       "theme": "local_issues",
       "message_type": "candidate_tweet"
@@ -155,55 +31,148 @@
     "issue_category": "local_issues"
   },
   {
-    "url": "https://twitter.com/reformdanielyoung/status/1753470849801583255",
-    "title": "Daniel Young - Law And Order Message",
-    "content": "Here in Birmingham Edgbaston, anti-social behaviour is making life miserable for law-abiding residents.",
-    "published_date": "2024-03-31",
-    "author": "Daniel Young",
+    "url": "https://twitter.com/barbaraperez79/status/1735935654109489824",
+    "title": "Barbara Perez - Economy Message",
+    "content": "I'm fighting for Birmingham Edgbaston because we need to unleash british enterprise and support our local businesses.",
+    "published_date": "2024-04-08",
+    "author": "Barbara Perez",
     "source_type": "twitter",
-    "source_name": "Daniel Young Twitter",
+    "source_name": "Barbara Perez Twitter",
     "platform": "twitter",
     "candidate_id": 1,
     "geographic_scope": "local",
     "engagement_metrics": {
-      "views": 2370,
-      "shares": 14,
-      "likes": 98,
-      "comments": 29
+      "views": 3261,
+      "shares": 20,
+      "likes": 70,
+      "comments": 19
     },
     "raw_data": {
-      "candidate_name": "Daniel Young",
+      "candidate_name": "Barbara Perez",
       "constituency": "Birmingham Edgbaston",
-      "theme": "law_and_order",
+      "theme": "economy",
       "message_type": "candidate_tweet"
     },
     "keywords": [
-      "law and order",
+      "economy",
       "birmingham",
       "reform uk",
       "candidate"
     ],
-    "issue_category": "law_and_order"
+    "issue_category": "economy"
   },
   {
-    "url": "https://twitter.com/reformdanielyoung/status/1738941419197131974",
-    "title": "Daniel Young - Net Zero Message",
-    "content": "As your Reform UK candidate for Birmingham Edgbaston, I believe green ideology is destroying british jobs and making us poorer.",
-    "published_date": "2024-05-01",
-    "author": "Daniel Young",
+    "url": "https://twitter.com/barbaraperez79/status/1762038227766289353",
+    "title": "Barbara Perez - Immigration Message",
+    "content": "As your Reform UK candidate for Birmingham Edgbaston, I believe britain needs an immigration system that serves our national interest, not global elites.",
+    "published_date": "2024-04-23",
+    "author": "Barbara Perez",
     "source_type": "twitter",
-    "source_name": "Daniel Young Twitter",
+    "source_name": "Barbara Perez Twitter",
     "platform": "twitter",
     "candidate_id": 1,
     "geographic_scope": "local",
     "engagement_metrics": {
-      "views": 345,
-      "shares": 82,
-      "likes": 99,
-      "comments": 30
+      "views": 1280,
+      "shares": 76,
+      "likes": 78,
+      "comments": 20
     },
     "raw_data": {
-      "candidate_name": "Daniel Young",
+      "candidate_name": "Barbara Perez",
+      "constituency": "Birmingham Edgbaston",
+      "theme": "immigration",
+      "message_type": "candidate_tweet"
+    },
+    "keywords": [
+      "immigration",
+      "birmingham",
+      "reform uk",
+      "candidate"
+    ],
+    "issue_category": "immigration"
+  },
+  {
+    "url": "https://twitter.com/barbaraperez79/status/1787744425642848774",
+    "title": "Barbara Perez - Local Issues Message",
+    "content": "As your Reform UK candidate for Birmingham Edgbaston, I believe our community deserves better public transport links and infrastructure.",
+    "published_date": "2024-03-06",
+    "author": "Barbara Perez",
+    "source_type": "twitter",
+    "source_name": "Barbara Perez Twitter",
+    "platform": "twitter",
+    "candidate_id": 1,
+    "geographic_scope": "local",
+    "engagement_metrics": {
+      "views": 3125,
+      "shares": 37,
+      "likes": 71,
+      "comments": 4
+    },
+    "raw_data": {
+      "candidate_name": "Barbara Perez",
+      "constituency": "Birmingham Edgbaston",
+      "theme": "local_issues",
+      "message_type": "candidate_tweet"
+    },
+    "keywords": [
+      "local issues",
+      "birmingham",
+      "reform uk",
+      "candidate"
+    ],
+    "issue_category": "local_issues"
+  },
+  {
+    "url": "https://twitter.com/barbaraperez79/status/1791590765455696298",
+    "title": "Barbara Perez - Immigration Message",
+    "content": "Here in Birmingham Edgbaston, britain needs an immigration system that serves our national interest, not global elites.",
+    "published_date": "2024-03-25",
+    "author": "Barbara Perez",
+    "source_type": "twitter",
+    "source_name": "Barbara Perez Twitter",
+    "platform": "twitter",
+    "candidate_id": 1,
+    "geographic_scope": "local",
+    "engagement_metrics": {
+      "views": 4353,
+      "shares": 48,
+      "likes": 80,
+      "comments": 4
+    },
+    "raw_data": {
+      "candidate_name": "Barbara Perez",
+      "constituency": "Birmingham Edgbaston",
+      "theme": "immigration",
+      "message_type": "candidate_tweet"
+    },
+    "keywords": [
+      "immigration",
+      "birmingham",
+      "reform uk",
+      "candidate"
+    ],
+    "issue_category": "immigration"
+  },
+  {
+    "url": "https://twitter.com/barbaraperez79/status/1787987506457039051",
+    "title": "Barbara Perez - Net Zero Message",
+    "content": "As your Reform UK candidate for Birmingham Edgbaston, I believe green ideology is destroying british jobs and making us poorer.",
+    "published_date": "2024-03-18",
+    "author": "Barbara Perez",
+    "source_type": "twitter",
+    "source_name": "Barbara Perez Twitter",
+    "platform": "twitter",
+    "candidate_id": 1,
+    "geographic_scope": "local",
+    "engagement_metrics": {
+      "views": 3257,
+      "shares": 79,
+      "likes": 89,
+      "comments": 17
+    },
+    "raw_data": {
+      "candidate_name": "Barbara Perez",
       "constituency": "Birmingham Edgbaston",
       "theme": "net_zero",
       "message_type": "candidate_tweet"
@@ -217,86 +186,86 @@
     "issue_category": "net_zero"
   },
   {
-    "url": "https://twitter.com/sharontaylor15/status/1729753113669502894",
-    "title": "Sharon Taylor - Law And Order Message",
-    "content": "The people of Manchester Central deserve better. Our communities deserve to feel safe day and night.",
-    "published_date": "2024-04-16",
-    "author": "Sharon Taylor",
+    "url": "https://twitter.com/barbaraperez79/status/1781005790310888312",
+    "title": "Barbara Perez - Brexit Message",
+    "content": "Join me in making Birmingham Edgbaston a place where the establishment tried to overturn brexit - we won't let them.",
+    "published_date": "2024-03-21",
+    "author": "Barbara Perez",
     "source_type": "twitter",
-    "source_name": "Sharon Taylor Twitter",
+    "source_name": "Barbara Perez Twitter",
     "platform": "twitter",
-    "candidate_id": 2,
+    "candidate_id": 1,
     "geographic_scope": "local",
     "engagement_metrics": {
-      "views": 3056,
-      "shares": 76,
-      "likes": 78,
-      "comments": 27
+      "views": 3518,
+      "shares": 63,
+      "likes": 115,
+      "comments": 5
     },
     "raw_data": {
-      "candidate_name": "Sharon Taylor",
-      "constituency": "Manchester Central",
-      "theme": "law_and_order",
-      "message_type": "candidate_tweet"
-    },
-    "keywords": [
-      "law and order",
-      "manchester",
-      "reform uk",
-      "candidate"
-    ],
-    "issue_category": "law_and_order"
-  },
-  {
-    "url": "https://twitter.com/sharontaylor15/status/1746561793148794116",
-    "title": "Sharon Taylor - Brexit Message",
-    "content": "I'm fighting for Manchester Central because brexit means taking back control of our laws, borders, and money.",
-    "published_date": "2024-04-18",
-    "author": "Sharon Taylor",
-    "source_type": "twitter",
-    "source_name": "Sharon Taylor Twitter",
-    "platform": "twitter",
-    "candidate_id": 2,
-    "geographic_scope": "local",
-    "engagement_metrics": {
-      "views": 3642,
-      "shares": 95,
-      "likes": 132,
-      "comments": 50
-    },
-    "raw_data": {
-      "candidate_name": "Sharon Taylor",
-      "constituency": "Manchester Central",
+      "candidate_name": "Barbara Perez",
+      "constituency": "Birmingham Edgbaston",
       "theme": "brexit",
       "message_type": "candidate_tweet"
     },
     "keywords": [
       "brexit",
-      "manchester",
+      "birmingham",
       "reform uk",
       "candidate"
     ],
     "issue_category": "brexit"
   },
   {
-    "url": "https://twitter.com/sharontaylor15/status/1706704067439771803",
-    "title": "Sharon Taylor - Brexit Message",
-    "content": "The people of Manchester Central deserve better. We need to maximize the opportunities of Brexit for British businesses.",
-    "published_date": "2024-04-19",
-    "author": "Sharon Taylor",
+    "url": "https://twitter.com/davidking/status/1712174957493913700",
+    "title": "David King - Immigration Message",
+    "content": "As your Reform UK candidate for Manchester Central, I believe mass immigration has put unsustainable pressure on our public services and housing.",
+    "published_date": "2024-04-05",
+    "author": "David King",
     "source_type": "twitter",
-    "source_name": "Sharon Taylor Twitter",
+    "source_name": "David King Twitter",
     "platform": "twitter",
     "candidate_id": 2,
     "geographic_scope": "local",
     "engagement_metrics": {
-      "views": 1036,
-      "shares": 96,
-      "likes": 151,
+      "views": 3546,
+      "shares": 32,
+      "likes": 99,
       "comments": 45
     },
     "raw_data": {
-      "candidate_name": "Sharon Taylor",
+      "candidate_name": "David King",
+      "constituency": "Manchester Central",
+      "theme": "immigration",
+      "message_type": "candidate_tweet"
+    },
+    "keywords": [
+      "immigration",
+      "manchester",
+      "reform uk",
+      "candidate"
+    ],
+    "issue_category": "immigration"
+  },
+  {
+    "url": "https://twitter.com/davidking/status/1730052461140740568",
+    "title": "David King - Brexit Message",
+    "content": "The people of Manchester Central deserve better. Brussels bureaucrats should not be making laws for Britain.",
+    "published_date": "2024-04-25",
+    "author": "David King",
+    "source_type": "twitter",
+    "source_name": "David King Twitter",
+    "platform": "twitter",
+    "candidate_id": 2,
+    "geographic_scope": "local",
+    "engagement_metrics": {
+      "views": 2209,
+      "shares": 39,
+      "likes": 141,
+      "comments": 20
+    },
+    "raw_data": {
+      "candidate_name": "David King",
       "constituency": "Manchester Central",
       "theme": "brexit",
       "message_type": "candidate_tweet"
@@ -308,5 +277,36 @@
       "candidate"
     ],
     "issue_category": "brexit"
+  },
+  {
+    "url": "https://twitter.com/davidking/status/1776431590145464506",
+    "title": "David King - Immigration Message",
+    "content": "I'm fighting for Manchester Central because mass immigration has put unsustainable pressure on our public services and housing.",
+    "published_date": "2024-03-19",
+    "author": "David King",
+    "source_type": "twitter",
+    "source_name": "David King Twitter",
+    "platform": "twitter",
+    "candidate_id": 2,
+    "geographic_scope": "local",
+    "engagement_metrics": {
+      "views": 705,
+      "shares": 80,
+      "likes": 73,
+      "comments": 26
+    },
+    "raw_data": {
+      "candidate_name": "David King",
+      "constituency": "Manchester Central",
+      "theme": "immigration",
+      "message_type": "candidate_tweet"
+    },
+    "keywords": [
+      "immigration",
+      "manchester",
+      "reform uk",
+      "candidate"
+    ],
+    "issue_category": "immigration"
   }
 ]
