@@ -1614,16 +1614,16 @@ def perform_mock_search(query, search_types, source_types, sentiment_filter, geo
         candidate_results = []
         if not candidates_df.empty:
             matching_candidates = candidates_df[
-                candidates_df['candidate_name'].str.contains(query_lower, case=False, na=False)
+                candidates_df['name'].str.contains(query_lower, case=False, na=False)
             ].head(limit)
             
             for _, candidate in matching_candidates.iterrows():
                 candidate_results.append({
-                    'candidate_id': candidate.get('candidate_id', 0),
-                    'candidate_name': candidate['candidate_name'],
+                    'candidate_id': candidate.get('id', 0),
+                    'candidate_name': candidate['name'],
                     'constituency_name': candidate.get('constituency_name'),
-                    'message_count': 15,  # Mock count
-                    'recent_message_count': 3
+                    'message_count': candidate.get('message_count', 0),
+                    'recent_message_count': min(candidate.get('message_count', 0), 3)  # Mock recent count
                 })
         
         results["candidates"] = {
