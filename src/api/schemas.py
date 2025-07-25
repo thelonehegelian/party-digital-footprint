@@ -179,3 +179,73 @@ class SentimentTrendsResponse(BaseModel):
     period_days: int
     daily_data: List[Dict[str, Any]] = Field(description="Daily sentiment data")
     overall_stats: Dict[str, Any] = Field(description="Overall statistics for the period")
+
+
+# Topic modeling schemas
+class TopicAnalysisRequest(BaseModel):
+    """Request schema for topic analysis."""
+    message_id: Optional[int] = Field(None, description="ID of message to analyze")
+    content: Optional[str] = Field(None, description="Content to analyze directly")
+    
+    @validator('content')
+    def validate_input(cls, v, values):
+        if not values.get('message_id') and not v:
+            raise ValueError('Either message_id or content must be provided')
+        return v
+    
+    class Config:
+        validate_assignment = True
+
+
+class TopicAnalysisResponse(BaseModel):
+    """Response schema for topic analysis."""
+    message_id: Optional[int] = None
+    content_preview: str
+    assigned_topics: List[Dict[str, Any]] = Field(description="Topics assigned to the message")
+    primary_topic: Dict[str, Any] = Field(description="Primary topic assignment")
+    analysis_method: str = Field(description="Method used for analysis")
+    analyzed_at: datetime
+
+
+class TopicOverviewResponse(BaseModel):
+    """Response schema for topic overview."""
+    total_topics: int
+    total_assignments: int
+    total_messages: int
+    coverage: float = Field(description="Percentage of messages with topic assignments")
+    messages_with_topics: int
+    needs_analysis: bool
+    top_topics: List[Dict[str, Any]] = Field(description="Top topics by message count")
+    trending_topics: List[Dict[str, Any]] = Field(description="Most trending topics")
+    avg_coherence: float = Field(description="Average topic coherence score")
+
+
+class TrendingTopicsResponse(BaseModel):
+    """Response schema for trending topics."""
+    time_period_days: int
+    trending_topics: List[Dict[str, Any]] = Field(description="Trending topics data")
+    total_topics: int
+    active_topics: int
+    analysis_date: str
+
+
+class TopicTrendsResponse(BaseModel):
+    """Response schema for topic trends over time."""
+    time_period_days: int
+    daily_data: Dict[str, Dict[str, Dict[str, Any]]] = Field(description="Daily topic activity data")
+    topics_summary: Dict[str, Dict[str, Any]] = Field(description="Topic summary information")
+    analysis_date: str
+
+
+class CandidateTopicsResponse(BaseModel):
+    """Response schema for candidate topic analysis."""
+    candidate_topic_analysis: List[Dict[str, Any]] = Field(description="Candidate topic distributions")
+    total_candidates_analyzed: int
+    analysis_date: str
+
+
+class TopicSentimentResponse(BaseModel):
+    """Response schema for topic-sentiment correlation."""
+    topic_sentiment_analysis: List[Dict[str, Any]] = Field(description="Topic sentiment correlations")
+    total_topics_analyzed: int
+    analysis_date: str

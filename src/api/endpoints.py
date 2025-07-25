@@ -6,21 +6,26 @@ from sqlalchemy import func
 from loguru import logger
 
 from ..database import get_session
-from ..models import Source, Message, Keyword, Constituency, Candidate, MessageSentiment
+from ..models import Source, Message, Keyword, Constituency, Candidate, MessageSentiment, TopicModel, MessageTopic
 from ..nlp.processor import BasicNLPProcessor
 from ..analytics.sentiment import PoliticalSentimentAnalyzer
+from ..analytics.topics import PoliticalTopicAnalyzer
 from .schemas import (
     MessageInput, BulkMessageInput, MessageResponse, 
     BulkMessageResponse, ErrorResponse, SentimentAnalysisRequest,
-    SentimentAnalysisResponse, SentimentTrendsResponse
+    SentimentAnalysisResponse, SentimentTrendsResponse,
+    TopicAnalysisRequest, TopicAnalysisResponse, TopicOverviewResponse,
+    TrendingTopicsResponse, TopicTrendsResponse, CandidateTopicsResponse,
+    TopicSentimentResponse
 )
 
 router = APIRouter(prefix="/api/v1", tags=["messages"])
 
-# Initialize NLP processor and sentiment analyzer
+# Initialize NLP processor and analytics engines
 nlp_processor = BasicNLPProcessor()
 nlp_processor.load_model()
 sentiment_analyzer = PoliticalSentimentAnalyzer()
+topic_analyzer = PoliticalTopicAnalyzer()
 
 
 def get_or_create_source(db: Session, source_name: str, source_type: str, source_url: str = None) -> Source:
@@ -751,4 +756,511 @@ async def get_sentiment_statistics(db: Session = Depends(get_session)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error retrieving sentiment statistics: {str(e)}"
+        )
+
+
+# Topic Modeling Endpoints
+
+@router.post("/analytics/topics/analyze", response_model=TopicAnalysisResponse, tags=["analytics"])
+async def analyze_message_topics(
+    request: TopicAnalysisRequest,
+    use_dummy: bool = True,
+    db: Session = Depends(get_session)
+):
+    """
+    Analyze topics for a specific message or content.
+    
+    Provides political topic modeling including:
+    - Topic detection and classification (Immigration, Economy, Healthcare, etc.)
+    - Primary topic identification with probability scores
+    - Multiple topic assignments per message
+    - Political issue categorization
+    - Topic coherence and relevance scoring
+    
+    **Parameters:**
+    - `message_id` (optional): Analyze specific message by ID
+    - `content` (optional): Analyze provided text content directly  
+    - `use_dummy`: Use dummy data generator for testing (default: true)
+    
+    **Returns:**
+    - Topic assignments with probabilities
+    - Primary topic identification
+    - Topic keywords and descriptions
+    - Analysis metadata including method used
+    """
+    try:
+        if request.message_id:
+            # Analyze existing message by ID
+            message = db.query(Message).filter(Message.id == request.message_id).first()
+            if not message:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Message not found"
+                )
+            
+            # Check if topic assignments already exist
+            existing_assignments = db.query(MessageTopic)\
+                .filter(MessageTopic.message_id == message.id)\
+                .all()
+            
+            if existing_assignments:
+                # Format existing assignments
+                assigned_topics = []
+                primary_topic = None
+                
+                for assignment in existing_assignments:
+                    topic_data = {
+                        "topic_id": assignment.topic_id,
+                        "topic_name": assignment.topic.topic_name,
+                        "probability": assignment.probability,
+                        "is_primary": assignment.is_primary_topic,
+                        "keywords": assignment.topic.keywords[:5] if assignment.topic.keywords else [],
+                        "description": assignment.topic.description
+                    }
+                    assigned_topics.append(topic_data)
+                    
+                    if assignment.is_primary_topic:
+                        primary_topic = topic_data
+                
+                return TopicAnalysisResponse(
+                    message_id=message.id,
+                    content_preview=message.content[:100] + "...",
+                    assigned_topics=assigned_topics,
+                    primary_topic=primary_topic or assigned_topics[0],
+                    analysis_method="existing_assignment",
+                    analyzed_at=existing_assignments[0].assigned_at
+                )
+            
+            # Generate new topic analysis
+            analyzed_count = topic_analyzer.analyze_topics_in_messages(
+                db, 
+                use_dummy=use_dummy, 
+                limit=1
+            )
+            
+            if analyzed_count > 0:
+                # Retrieve the new assignments
+                new_assignments = db.query(MessageTopic)\
+                    .filter(MessageTopic.message_id == message.id)\
+                    .all()
+                
+                assigned_topics = []
+                primary_topic = None
+                
+                for assignment in new_assignments:
+                    topic_data = {
+                        "topic_id": assignment.topic_id,
+                        "topic_name": assignment.topic.topic_name,
+                        "probability": assignment.probability,
+                        "is_primary": assignment.is_primary_topic,
+                        "keywords": assignment.topic.keywords[:5] if assignment.topic.keywords else [],
+                        "description": assignment.topic.description
+                    }
+                    assigned_topics.append(topic_data)
+                    
+                    if assignment.is_primary_topic:
+                        primary_topic = topic_data
+                
+                return TopicAnalysisResponse(
+                    message_id=message.id,
+                    content_preview=message.content[:100] + "...",
+                    assigned_topics=assigned_topics,
+                    primary_topic=primary_topic or assigned_topics[0],
+                    analysis_method="dummy_generator" if use_dummy else "lda_topic_model",
+                    analyzed_at=new_assignments[0].assigned_at
+                )
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to generate topic analysis"
+                )
+            
+        elif request.content:
+            # Analyze provided content directly (no database storage)
+            # Create temporary message for analysis
+            temp_message = Message(content=request.content)
+            
+            # For direct content analysis, we'll simulate topic assignment
+            analyzer_topics = topic_analyzer.political_topics
+            topic_names = list(analyzer_topics.keys())
+            
+            # Simple keyword matching for demo purposes
+            assigned_topics = []
+            content_lower = request.content.lower()
+            
+            for topic_name, topic_info in analyzer_topics.items():
+                # Check if any keywords match
+                keyword_matches = sum(1 for kw in topic_info["keywords"] if kw in content_lower)
+                if keyword_matches > 0:
+                    probability = min(0.9, keyword_matches * 0.3)
+                    assigned_topics.append({
+                        "topic_name": topic_name,
+                        "probability": probability,
+                        "is_primary": len(assigned_topics) == 0,  # First match is primary
+                        "keywords": topic_info["keywords"][:5],
+                        "description": topic_info["description"],
+                        "keyword_matches": keyword_matches
+                    })
+            
+            # If no matches, assign a random topic for demo
+            if not assigned_topics:
+                import random
+                topic_name = random.choice(topic_names)
+                topic_info = analyzer_topics[topic_name]
+                assigned_topics.append({
+                    "topic_name": topic_name,
+                    "probability": 0.4,
+                    "is_primary": True,
+                    "keywords": topic_info["keywords"][:5],
+                    "description": topic_info["description"],
+                    "keyword_matches": 0
+                })
+            
+            primary_topic = next((t for t in assigned_topics if t["is_primary"]), assigned_topics[0])
+            
+            return TopicAnalysisResponse(
+                content_preview=request.content[:100] + "..." if len(request.content) > 100 else request.content,
+                assigned_topics=assigned_topics,
+                primary_topic=primary_topic,
+                analysis_method="keyword_matching_demo",
+                analyzed_at=datetime.utcnow()
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Either message_id or content must be provided"
+            )
+            
+    except HTTPException:
+        # Re-raise HTTP exceptions without modification
+        raise
+    except Exception as e:
+        logger.error(f"Error analyzing topics: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error analyzing topics: {str(e)}"
+        )
+
+
+@router.post("/analytics/topics/batch", tags=["analytics"])
+async def analyze_batch_topics(
+    use_dummy: bool = True,
+    limit: int = 100,
+    regenerate: bool = False,
+    db: Session = Depends(get_session)
+):
+    """
+    Analyze topics for all messages without existing topic assignments.
+    
+    Batch processes messages for topic modeling with the following features:
+    - Processes messages without existing topic assignments
+    - Configurable batch size (default: 100, max: 1000)
+    - Choice between real LDA analysis or dummy data generation
+    - Option to regenerate existing assignments
+    - Comprehensive progress reporting
+    
+    **Parameters:**
+    - `use_dummy`: Use dummy topic generator for testing (default: true)
+    - `limit`: Maximum number of messages to process (default: 100, max: 1000)
+    - `regenerate`: Regenerate existing topic assignments (default: false)
+    
+    **Returns:**
+    - Number of messages analyzed
+    - Processing summary with timing information
+    - Topic assignments created
+    """
+    try:
+        if limit > 1000:
+            limit = 1000
+            
+        start_time = datetime.utcnow()
+        analyzed_count = topic_analyzer.analyze_topics_in_messages(
+            db, 
+            use_dummy=use_dummy, 
+            limit=limit,
+            regenerate=regenerate
+        )
+        end_time = datetime.utcnow()
+        processing_time = (end_time - start_time).total_seconds()
+        
+        return {
+            "status": "success",
+            "analyzed_count": analyzed_count,
+            "processing_time_seconds": processing_time,
+            "analysis_method": "dummy_generator" if use_dummy else "lda_topic_model",
+            "batch_limit": limit,
+            "regenerate": regenerate,
+            "completed_at": end_time
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in batch topic analysis: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error processing batch topic analysis: {str(e)}"
+        )
+
+
+@router.get("/analytics/topics/overview", response_model=TopicOverviewResponse, tags=["analytics"])
+async def get_topic_overview(db: Session = Depends(get_session)):
+    """
+    Get comprehensive topic modeling overview.
+    
+    Provides overall topic analysis metrics including:
+    - Total topics and message assignments
+    - Analysis coverage (percentage of messages with topics)
+    - Top topics by message count
+    - Most trending topics by score
+    - Average topic coherence quality
+    
+    **Returns:**
+    - Complete topic modeling overview
+    - Top performing topics
+    - Trending topics analysis
+    - System coverage metrics
+    """
+    try:
+        overview_data = topic_analyzer.get_topic_overview(db)
+        
+        return TopicOverviewResponse(
+            total_topics=overview_data["total_topics"],
+            total_assignments=overview_data["total_assignments"],
+            total_messages=overview_data["total_messages"],
+            coverage=overview_data["coverage"],
+            messages_with_topics=overview_data.get("messages_with_topics", 0),
+            needs_analysis=overview_data["needs_analysis"],
+            top_topics=overview_data["top_topics"],
+            trending_topics=overview_data["trending_topics"],
+            avg_coherence=overview_data["avg_coherence"]
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting topic overview: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving topic overview: {str(e)}"
+        )
+
+
+@router.get("/analytics/topics/trending", response_model=TrendingTopicsResponse, tags=["analytics"])
+async def get_trending_topics(
+    days: int = 7,
+    limit: int = 10,
+    db: Session = Depends(get_session)
+):
+    """
+    Get trending topics for political messaging analysis.
+    
+    Analyzes topic trends over time periods with:
+    - Topic popularity and growth rates
+    - Recent message activity per topic
+    - Trending score calculations
+    - Topic keyword extraction
+    - Time-based trend analysis
+    
+    **Parameters:**
+    - `days`: Number of days to analyze (default: 7, max: 90)
+    - `limit`: Maximum number of topics to return (default: 10, max: 50)
+    
+    **Returns:**
+    - Trending topics with scores and growth rates
+    - Recent activity metrics
+    - Topic keywords and descriptions
+    - Time period statistics
+    """
+    try:
+        if days > 90:
+            days = 90
+        if limit > 50:
+            limit = 50
+            
+        trending_data = topic_analyzer.get_trending_topics(db, days=days, limit=limit)
+        
+        return TrendingTopicsResponse(
+            time_period_days=trending_data["time_period_days"],
+            trending_topics=trending_data["trending_topics"],
+            total_topics=trending_data["total_topics"],
+            active_topics=trending_data["active_topics"],
+            analysis_date=trending_data["analysis_date"]
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting trending topics: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving trending topics: {str(e)}"
+        )
+
+
+@router.get("/analytics/topics/trends", response_model=TopicTrendsResponse, tags=["analytics"])
+async def get_topic_trends(
+    days: int = 30,
+    topic_id: Optional[int] = None,
+    db: Session = Depends(get_session)
+):
+    """
+    Get topic trends over time for visualization.
+    
+    Analyzes topic activity patterns across time periods with:
+    - Daily topic message counts
+    - Topic probability trends
+    - Individual or all topics analysis
+    - Time-series data for dashboard charts
+    
+    **Parameters:**
+    - `days`: Number of days to analyze (default: 30, max: 365)
+    - `topic_id` (optional): Analyze specific topic only
+    
+    **Returns:**
+    - Daily topic activity data
+    - Topic summary information
+    - Time-series trend data for visualizations
+    """
+    try:
+        if days > 365:
+            days = 365
+            
+        trends_data = topic_analyzer.get_topic_trends_over_time(
+            db, 
+            topic_id=topic_id, 
+            days=days
+        )
+        
+        return TopicTrendsResponse(
+            time_period_days=trends_data["time_period_days"],
+            daily_data=trends_data["daily_data"],
+            topics_summary=trends_data["topics_summary"],
+            analysis_date=trends_data["analysis_date"]
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting topic trends: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving topic trends: {str(e)}"
+        )
+
+
+@router.get("/analytics/topics/candidates", response_model=CandidateTopicsResponse, tags=["analytics"])
+async def get_candidate_topics(
+    limit: int = 20,
+    db: Session = Depends(get_session)
+):
+    """
+    Get topic distribution analysis by candidate.
+    
+    Analyzes how different candidates focus on various political topics:
+    - Topic distribution per candidate
+    - Candidate messaging diversity
+    - Top topics for each candidate
+    - Message count analysis
+    
+    **Parameters:**
+    - `limit`: Maximum number of candidates to analyze (default: 20, max: 100)
+    
+    **Returns:**
+    - Candidate topic distribution data
+    - Topic diversity metrics
+    - Top topics per candidate
+    """
+    try:
+        if limit > 100:
+            limit = 100
+            
+        candidate_data = topic_analyzer.get_candidate_topic_analysis(db, limit=limit)
+        
+        return CandidateTopicsResponse(
+            candidate_topic_analysis=candidate_data["candidate_topic_analysis"],
+            total_candidates_analyzed=candidate_data["total_candidates_analyzed"],
+            analysis_date=candidate_data["analysis_date"]
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting candidate topics: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving candidate topics: {str(e)}"
+        )
+
+
+@router.get("/analytics/topics/sentiment", response_model=TopicSentimentResponse, tags=["analytics"])
+async def get_topic_sentiment_correlation(db: Session = Depends(get_session)):
+    """
+    Get topic-sentiment correlation analysis.
+    
+    Analyzes the relationship between political topics and sentiment:
+    - Average sentiment per topic
+    - Sentiment distribution by topic (positive/negative/neutral)
+    - Topic-based emotional analysis
+    - Correlation insights between issues and public sentiment
+    
+    **Returns:**
+    - Topic sentiment correlations
+    - Sentiment distribution per topic
+    - Emotional content analysis by topic
+    - Statistical insights
+    """
+    try:
+        correlation_data = topic_analyzer.get_topic_sentiment_analysis(db)
+        
+        return TopicSentimentResponse(
+            topic_sentiment_analysis=correlation_data["topic_sentiment_analysis"],
+            total_topics_analyzed=correlation_data["total_topics_analyzed"],
+            analysis_date=correlation_data["analysis_date"]
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting topic sentiment correlation: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving topic sentiment correlation: {str(e)}"
+        )
+
+
+@router.get("/analytics/topics/list", tags=["analytics"])
+async def list_all_topics(db: Session = Depends(get_session)):
+    """
+    List all available political topics.
+    
+    Returns information about all configured political topics including:
+    - Topic names and descriptions
+    - Keywords and key phrases
+    - Message counts and statistics
+    - Topic coherence scores
+    - Trending information
+    
+    **Returns:**
+    - Complete list of political topics
+    - Topic metadata and statistics
+    - Keywords and descriptions
+    """
+    try:
+        topics = db.query(TopicModel).all()
+        
+        return {
+            "topics": [
+                {
+                    "id": topic.id,
+                    "topic_name": topic.topic_name,
+                    "topic_number": topic.topic_number,
+                    "description": topic.description,
+                    "keywords": topic.keywords,
+                    "message_count": topic.message_count,
+                    "coherence_score": topic.coherence_score,
+                    "trend_score": topic.trend_score,
+                    "growth_rate": topic.growth_rate,
+                    "avg_sentiment": topic.avg_sentiment,
+                    "created_at": topic.created_at,
+                    "last_updated": topic.last_updated
+                }
+                for topic in topics
+            ],
+            "total_topics": len(topics)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error listing topics: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving topics list: {str(e)}"
         )
