@@ -1,22 +1,27 @@
-from datetime import datetime
+import time
+import random
+from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from loguru import logger
 
 from ..database import get_session
-from ..models import Source, Message, Keyword, Constituency, Candidate, MessageSentiment, TopicModel, MessageTopic
+from ..models import Source, Message, Keyword, Constituency, Candidate, MessageSentiment, TopicModel, MessageTopic, EngagementMetrics
 from ..nlp.processor import BasicNLPProcessor
 from ..analytics.sentiment import PoliticalSentimentAnalyzer
 from ..analytics.topics import PoliticalTopicAnalyzer
+from ..analytics.engagement import PoliticalEngagementAnalyzer
 from .schemas import (
     MessageInput, BulkMessageInput, MessageResponse, 
     BulkMessageResponse, ErrorResponse, SentimentAnalysisRequest,
     SentimentAnalysisResponse, SentimentTrendsResponse,
     TopicAnalysisRequest, TopicAnalysisResponse, TopicOverviewResponse,
     TrendingTopicsResponse, TopicTrendsResponse, CandidateTopicsResponse,
-    TopicSentimentResponse
+    TopicSentimentResponse, EngagementAnalysisRequest, EngagementAnalysisResponse,
+    EngagementBatchResponse, EngagementOverviewResponse, PlatformPerformanceResponse,
+    ViralContentResponse, CandidateEngagementResponse, EngagementTrendsResponse
 )
 
 router = APIRouter(prefix="/api/v1", tags=["messages"])
@@ -26,6 +31,7 @@ nlp_processor = BasicNLPProcessor()
 nlp_processor.load_model()
 sentiment_analyzer = PoliticalSentimentAnalyzer()
 topic_analyzer = PoliticalTopicAnalyzer()
+engagement_analyzer = PoliticalEngagementAnalyzer()
 
 
 def get_or_create_source(db: Session, source_name: str, source_type: str, source_url: str = None) -> Source:
@@ -1263,4 +1269,204 @@ async def list_all_topics(db: Session = Depends(get_session)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error retrieving topics list: {str(e)}"
+        )
+
+
+# ===== ENGAGEMENT ANALYSIS ENDPOINTS =====
+
+@router.post("/analytics/engagement/analyze", response_model=EngagementAnalysisResponse)
+async def analyze_message_engagement(
+    request: EngagementAnalysisRequest,
+    use_dummy: bool = Query(True, description="Use dummy engagement data for testing"),
+    db: Session = Depends(get_session)
+):
+    """Analyze engagement metrics for a message."""
+    try:
+        # Validate input
+        if not request.message_id and not request.content:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Either message_id or content must be provided"
+            )
+        
+        if request.message_id:
+            # Analyze existing message
+            message = db.query(Message).filter(Message.id == request.message_id).first()
+            if not message:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Message not found"
+                )
+            
+            engagement_metrics = engagement_analyzer.analyze_message_engagement(
+                db, message, use_dummy=use_dummy
+            )
+            
+            return EngagementAnalysisResponse(
+                message_id=message.id,
+                content_preview=message.content[:200] + "..." if len(message.content) > 200 else message.content,
+                engagement_score=engagement_metrics.engagement_score,
+                virality_score=engagement_metrics.virality_score,
+                influence_score=engagement_metrics.influence_score,
+                platform_metrics=engagement_metrics.platform_metrics,
+                reach_metrics=engagement_metrics.reach_metrics,
+                interaction_quality=engagement_metrics.interaction_quality,
+                audience_relevance=engagement_metrics.audience_relevance,
+                platform_percentile=engagement_metrics.platform_percentile,
+                candidate_percentile=engagement_metrics.candidate_percentile,
+                engagement_velocity=engagement_metrics.engagement_velocity,
+                analysis_method=engagement_metrics.calculation_method,
+                analyzed_at=engagement_metrics.calculated_at
+            )
+        
+        else:
+            # Analyze provided content (demo mode)
+            dummy_message = Message(
+                content=request.content,
+                source=Source(source_type="demo", name="Demo Source"),
+                published_at=datetime.now()
+            )
+            
+            dummy_data = engagement_analyzer.generate_dummy_engagement_data(dummy_message)
+            platform_metrics = dummy_data['platform_metrics']
+            reach_metrics = dummy_data['reach_metrics']
+            
+            engagement_score = engagement_analyzer.calculate_engagement_score(platform_metrics, "demo")
+            virality_score = engagement_analyzer.calculate_virality_score(platform_metrics, timedelta(hours=2))
+            influence_score = engagement_analyzer.calculate_influence_score(engagement_score, reach_metrics)
+            
+            return EngagementAnalysisResponse(
+                content_preview=request.content[:200] + "..." if len(request.content) > 200 else request.content,
+                engagement_score=engagement_score,
+                virality_score=virality_score,
+                influence_score=influence_score,
+                platform_metrics=platform_metrics,
+                reach_metrics=reach_metrics,
+                interaction_quality=dummy_data['interaction_quality'],
+                audience_relevance=dummy_data['audience_relevance'],
+                platform_percentile=random.uniform(20, 90),
+                candidate_percentile=random.uniform(15, 95),
+                engagement_velocity=random.uniform(1, 50),
+                analysis_method="dummy_demo",
+                analyzed_at=datetime.now()
+            )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error analyzing engagement: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error analyzing engagement: {str(e)}"
+        )
+
+
+@router.post("/analytics/engagement/batch", response_model=EngagementBatchResponse)
+async def batch_engagement_analysis(
+    use_dummy: bool = Query(True, description="Use dummy engagement data"),
+    limit: int = Query(50, ge=1, le=1000, description="Maximum messages to analyze"),
+    regenerate: bool = Query(False, description="Regenerate existing engagement data"),
+    db: Session = Depends(get_session)
+):
+    """Analyze engagement for multiple messages in batch."""
+    try:
+        start_time = time.time()
+        
+        # Apply limit cap
+        limit = min(limit, 1000)
+        
+        if regenerate:
+            # Clear existing engagement data
+            db.query(EngagementMetrics).delete()
+            db.commit()
+        
+        analyzed_count = engagement_analyzer.analyze_engagement_in_messages(
+            db, use_dummy=use_dummy, limit=limit
+        )
+        
+        processing_time = time.time() - start_time
+        
+        return EngagementBatchResponse(
+            status="success",
+            analyzed_count=analyzed_count,
+            processing_time_seconds=round(processing_time, 2),
+            analysis_method="dummy_generator" if use_dummy else "real_data",
+            batch_limit=limit,
+            regenerate=regenerate
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in batch engagement analysis: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error in batch engagement analysis: {str(e)}"
+        )
+
+
+@router.get("/analytics/engagement/overview", response_model=EngagementOverviewResponse)
+async def get_engagement_overview(db: Session = Depends(get_session)):
+    """Get engagement analysis overview and statistics."""
+    try:
+        overview_data = engagement_analyzer.get_engagement_overview(db)
+        
+        return EngagementOverviewResponse(
+            total_messages=overview_data["total_messages"],
+            analyzed_messages=overview_data["analyzed_messages"],
+            coverage=overview_data["coverage"],
+            needs_analysis=overview_data["needs_analysis"],
+            avg_engagement=overview_data["avg_engagement"],
+            avg_virality=overview_data["avg_virality"],
+            avg_influence=overview_data["avg_influence"],
+            top_performing=overview_data["top_performing"]
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting engagement overview: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving engagement overview: {str(e)}"
+        )
+
+
+@router.get("/analytics/engagement/platforms", response_model=PlatformPerformanceResponse)
+async def get_platform_performance(db: Session = Depends(get_session)):
+    """Get platform performance comparison."""
+    try:
+        platform_data = engagement_analyzer.get_platform_performance_comparison(db)
+        
+        return PlatformPerformanceResponse(
+            platform_comparison=platform_data["platform_comparison"],
+            total_platforms=platform_data["total_platforms"],
+            analysis_date=datetime.now().isoformat()
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting platform performance: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving platform performance: {str(e)}"
+        )
+
+
+@router.get("/analytics/engagement/viral", response_model=ViralContentResponse)
+async def get_viral_content(
+    threshold: float = Query(0.7, ge=0.0, le=1.0, description="Virality score threshold"),
+    db: Session = Depends(get_session)
+):
+    """Get viral content analysis."""
+    try:
+        viral_data = engagement_analyzer.get_viral_content_analysis(db, threshold)
+        
+        return ViralContentResponse(
+            viral_threshold=viral_data["viral_threshold"],
+            viral_messages_found=viral_data["viral_messages_found"],
+            viral_content=viral_data["viral_content"],
+            analysis_date=datetime.now().isoformat()
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting viral content: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving viral content: {str(e)}"
         )

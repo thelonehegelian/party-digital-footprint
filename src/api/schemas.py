@@ -249,3 +249,89 @@ class TopicSentimentResponse(BaseModel):
     topic_sentiment_analysis: List[Dict[str, Any]] = Field(description="Topic sentiment correlations")
     total_topics_analyzed: int
     analysis_date: str
+
+
+# ===== ENGAGEMENT ANALYSIS SCHEMAS =====
+
+class EngagementAnalysisRequest(BaseModel):
+    """Request schema for engagement analysis."""
+    message_id: Optional[int] = None
+    content: Optional[str] = None
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "message_id": 123,
+                "content": "Breaking: New policy announcement on immigration reform..."
+            }
+        }
+
+
+class EngagementAnalysisResponse(BaseModel):
+    """Response schema for engagement analysis."""
+    message_id: Optional[int] = None
+    content_preview: str
+    engagement_score: float = Field(description="Normalized engagement score (0.0-1.0)")
+    virality_score: float = Field(description="Virality potential score (0.0-1.0)")
+    influence_score: float = Field(description="Message influence score (0.0-1.0)")
+    platform_metrics: Dict[str, Any] = Field(description="Platform-specific engagement metrics")
+    reach_metrics: Dict[str, Any] = Field(description="Reach and impression data")
+    interaction_quality: float = Field(description="Quality of audience interactions")
+    audience_relevance: float = Field(description="Relevance to target audience")
+    platform_percentile: float = Field(description="Performance vs other platform messages")
+    candidate_percentile: float = Field(description="Performance vs candidate's other messages")
+    engagement_velocity: float = Field(description="Speed of initial engagement")
+    analysis_method: str = Field(description="Method used for analysis")
+    analyzed_at: datetime
+
+
+class EngagementBatchResponse(BaseModel):
+    """Response schema for batch engagement analysis."""
+    status: str = Field(description="Analysis status")
+    analyzed_count: int = Field(description="Number of messages analyzed")
+    processing_time_seconds: float = Field(description="Time taken for analysis")
+    analysis_method: str = Field(description="Method used for analysis")
+    batch_limit: int = Field(description="Batch size limit applied")
+    regenerate: bool = Field(description="Whether existing data was regenerated")
+
+
+class EngagementOverviewResponse(BaseModel):
+    """Response schema for engagement overview."""
+    total_messages: int
+    analyzed_messages: int
+    coverage: float = Field(description="Percentage of messages with engagement analysis")
+    needs_analysis: bool
+    avg_engagement: float = Field(description="Average engagement score")
+    avg_virality: float = Field(description="Average virality score")
+    avg_influence: float = Field(description="Average influence score")
+    top_performing: List[Dict[str, Any]] = Field(description="Top performing messages")
+
+
+class PlatformPerformanceResponse(BaseModel):
+    """Response schema for platform performance comparison."""
+    platform_comparison: List[Dict[str, Any]] = Field(description="Platform performance data")
+    total_platforms: int
+    analysis_date: str
+
+
+class ViralContentResponse(BaseModel):
+    """Response schema for viral content analysis."""
+    viral_threshold: float = Field(description="Virality score threshold used")
+    viral_messages_found: int
+    viral_content: List[Dict[str, Any]] = Field(description="Viral messages data")
+    analysis_date: str
+
+
+class CandidateEngagementResponse(BaseModel):
+    """Response schema for candidate engagement analysis."""
+    candidate_engagement_analysis: List[Dict[str, Any]] = Field(description="Candidate engagement data")
+    total_candidates_analyzed: int
+    analysis_date: str
+
+
+class EngagementTrendsResponse(BaseModel):
+    """Response schema for engagement trends over time."""
+    time_period_days: int
+    daily_data: Dict[str, Dict[str, Any]] = Field(description="Daily engagement data")
+    trends_summary: Dict[str, Any] = Field(description="Engagement trends summary")
+    analysis_date: str
