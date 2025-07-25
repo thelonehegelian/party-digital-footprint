@@ -394,3 +394,169 @@ class ReportExportResponse(BaseModel):
     content: str = Field(description="Exported report content")
     filename: str = Field(description="Suggested filename")
     generated_at: datetime
+
+
+# ===== SEARCH SCHEMAS =====
+
+class SearchRequest(BaseModel):
+    """Request schema for search functionality."""
+    query: str = Field(min_length=1, max_length=500, description="Search query text")
+    search_types: Optional[List[str]] = Field(
+        default=["messages", "keywords", "candidates"], 
+        description="Types of content to search: messages, keywords, candidates, sources"
+    )
+    source_types: Optional[List[str]] = Field(
+        default=None,
+        description="Filter by source types: website, twitter, facebook, meta_ads"
+    )
+    candidate_ids: Optional[List[int]] = Field(
+        default=None, 
+        description="Filter by specific candidate IDs"
+    )
+    date_from: Optional[datetime] = Field(
+        default=None, 
+        description="Search messages from this date onwards"
+    )
+    date_to: Optional[datetime] = Field(
+        default=None, 
+        description="Search messages up to this date"
+    )
+    sentiment_filter: Optional[str] = Field(
+        default=None,
+        description="Filter by sentiment: positive, negative, neutral"
+    )
+    geographic_scope: Optional[str] = Field(
+        default=None,
+        description="Filter by geographic scope: national, regional, local"
+    )
+    limit: Optional[int] = Field(
+        default=50, 
+        ge=1, 
+        le=200, 
+        description="Maximum number of results per search type"
+    )
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "query": "immigration policy reform",
+                "search_types": ["messages", "keywords"],
+                "source_types": ["twitter", "website"],
+                "date_from": "2024-01-01T00:00:00Z",
+                "limit": 20
+            }
+        }
+
+
+class MessageSearchResult(BaseModel):
+    """Individual message search result."""
+    message_id: int
+    content: str = Field(description="Message content (truncated if long)")
+    content_preview: str = Field(description="Short preview of content")
+    url: Optional[str] = None
+    published_at: Optional[datetime] = None
+    source_name: str
+    source_type: str
+    candidate_name: Optional[str] = None
+    message_type: Optional[str] = None
+    geographic_scope: Optional[str] = None
+    sentiment_score: Optional[float] = None
+    sentiment_label: Optional[str] = None
+    keywords: List[str] = Field(description="Associated keywords")
+    relevance_score: float = Field(description="Search relevance score (0.0-1.0)")
+
+
+class KeywordSearchResult(BaseModel):
+    """Individual keyword search result."""
+    keyword: str
+    message_count: int = Field(description="Number of messages containing this keyword")
+    confidence: float = Field(description="Average extraction confidence")
+    extraction_method: str
+    recent_messages: List[Dict[str, Any]] = Field(description="Recent messages with this keyword")
+
+
+class CandidateSearchResult(BaseModel):
+    """Individual candidate search result."""
+    candidate_id: int
+    candidate_name: str
+    constituency_name: Optional[str] = None
+    constituency_region: Optional[str] = None
+    message_count: int = Field(description="Total messages from this candidate")
+    recent_message_count: int = Field(description="Messages in last 30 days")
+    social_media_accounts: Optional[Dict[str, str]] = None
+    avg_sentiment: Optional[float] = None
+    top_keywords: List[str] = Field(description="Most common keywords in candidate's messages")
+
+
+class SourceSearchResult(BaseModel):
+    """Individual source search result."""
+    source_id: int
+    source_name: str
+    source_type: str
+    source_url: Optional[str] = None
+    message_count: int = Field(description="Total messages from this source")
+    last_activity: Optional[datetime] = Field(description="Last message timestamp")
+    active: bool
+
+
+class SearchResponse(BaseModel):
+    """Response schema for search results."""
+    query: str
+    total_results: int
+    search_time_ms: float = Field(description="Search execution time in milliseconds")
+    results: Dict[str, Any] = Field(description="Search results grouped by type")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "query": "immigration policy",
+                "total_results": 47,
+                "search_time_ms": 125.6,
+                "results": {
+                    "messages": {
+                        "count": 23,
+                        "items": []
+                    },
+                    "keywords": {
+                        "count": 12,
+                        "items": []
+                    },
+                    "candidates": {
+                        "count": 8,
+                        "items": []
+                    },
+                    "sources": {
+                        "count": 4,
+                        "items": []
+                    }
+                }
+            }
+        }
+
+
+class AutocompleteRequest(BaseModel):
+    """Request schema for search autocomplete."""
+    query: str = Field(min_length=1, max_length=100, description="Partial search query")
+    search_type: str = Field(
+        default="all",
+        description="Type of suggestions: all, keywords, candidates, sources"
+    )
+    limit: Optional[int] = Field(default=10, ge=1, le=50, description="Max suggestions")
+
+
+class AutocompleteResponse(BaseModel):
+    """Response schema for search autocomplete."""
+    query: str
+    suggestions: List[Dict[str, Any]] = Field(description="Autocomplete suggestions")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "query": "immig",
+                "suggestions": [
+                    {"text": "immigration", "type": "keyword", "count": 45},
+                    {"text": "immigration policy", "type": "phrase", "count": 23},
+                    {"text": "immigration reform", "type": "phrase", "count": 18}
+                ]
+            }
+        }

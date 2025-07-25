@@ -40,6 +40,8 @@ from src.dashboard.intelligence_visualizations import (
     display_report_content, display_reports_list, create_export_controls,
     create_time_period_analysis_chart, display_report_comparison
 )
+import requests
+import time
 
 
 st.set_page_config(
@@ -153,7 +155,7 @@ def main():
         return
     
     # Create tabs for different views
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["📊 Overview", "🗳️ Constituencies", "👥 Candidates", "🎭 Sentiment Analysis", "📊 Topic Modeling", "⚡ Engagement Analytics", "📈 Intelligence Reports"])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs(["📊 Overview", "🗳️ Constituencies", "👥 Candidates", "🎭 Sentiment Analysis", "📊 Topic Modeling", "⚡ Engagement Analytics", "📈 Intelligence Reports", "🔍 Search"])
     
     # Sidebar filters
     st.sidebar.header("Filters")
@@ -1323,6 +1325,171 @@ def main():
                     if key not in ['raw_post', 'raw_ad']:  # Skip large raw data
                         st.write(f"- {key}: {value}")
     
+    # === TAB 8: SEARCH ===
+    with tab8:
+        st.subheader("🔍 Search Dashboard")
+        
+        # Search controls
+        st.markdown("### Search Parameters")
+        
+        col1, col2 = st.columns([2, 1])
+        
+        with col1:
+            search_query = st.text_input(
+                "Search Query",
+                placeholder="Enter keywords, phrases, or candidate names...",
+                help="Search across messages, keywords, candidates, and sources"
+            )
+        
+        with col2:
+            search_button = st.button("🔍 Search", type="primary")
+        
+        # Search filters
+        with st.expander("Advanced Search Filters", expanded=False):
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                search_types = st.multiselect(
+                    "Search In",
+                    options=["messages", "keywords", "candidates", "sources"],
+                    default=["messages", "keywords", "candidates"],
+                    help="Select what types of content to search"
+                )
+                
+                source_types = st.multiselect(
+                    "Source Types",
+                    options=["website", "twitter", "facebook", "meta_ads"],
+                    help="Filter by source platform"
+                )
+            
+            with col2:
+                date_from = st.date_input(
+                    "Date From",
+                    value=None,
+                    help="Search messages from this date onwards"
+                )
+                
+                date_to = st.date_input(
+                    "Date To", 
+                    value=None,
+                    help="Search messages up to this date"
+                )
+            
+            with col3:
+                sentiment_filter = st.selectbox(
+                    "Sentiment Filter",
+                    options=[None, "positive", "negative", "neutral"],
+                    format_func=lambda x: "All Sentiments" if x is None else x.title(),
+                    help="Filter messages by sentiment"
+                )
+                
+                geographic_scope = st.selectbox(
+                    "Geographic Scope",
+                    options=[None, "national", "regional", "local"],
+                    format_func=lambda x: "All Scopes" if x is None else x.title(),
+                    help="Filter by geographic scope"
+                )
+                
+                result_limit = st.slider(
+                    "Max Results per Type",
+                    min_value=10,
+                    max_value=200,
+                    value=50,
+                    help="Maximum number of results to return for each search type"
+                )
+        
+        # Perform search when button is clicked or query is entered
+        if search_button or search_query:
+            if not search_query:
+                st.warning("Please enter a search query.")
+            else:
+                with st.spinner("Searching..."):
+                    try:
+                        # Mock search results for demonstration
+                        # In real implementation, this would call the search API
+                        search_results = perform_mock_search(
+                            search_query, 
+                            search_types, 
+                            source_types,
+                            sentiment_filter,
+                            geographic_scope,
+                            result_limit,
+                            filtered_messages,
+                            filtered_keywords,
+                            candidates_df
+                        )
+                        
+                        # Display search results
+                        st.markdown(f"### Search Results for: '{search_query}'")
+                        
+                        if search_results['total_results'] == 0:
+                            st.info("No results found. Try adjusting your search query or filters.")
+                        else:
+                            st.success(f"Found {search_results['total_results']} results in {search_results['search_time_ms']:.1f}ms")
+                            
+                            # Create result tabs
+                            result_tabs = []
+                            result_tab_names = []
+                            
+                            if "messages" in search_results['results'] and search_results['results']["messages"]["count"] > 0:
+                                result_tab_names.append(f"📄 Messages ({search_results['results']['messages']['count']})")
+                            
+                            if "keywords" in search_results['results'] and search_results['results']["keywords"]["count"] > 0:
+                                result_tab_names.append(f"🏷️ Keywords ({search_results['results']['keywords']['count']})")
+                            
+                            if "candidates" in search_results['results'] and search_results['results']["candidates"]["count"] > 0:
+                                result_tab_names.append(f"👥 Candidates ({search_results['results']['candidates']['count']})")
+                            
+                            if "sources" in search_results['results'] and search_results['results']["sources"]["count"] > 0:
+                                result_tab_names.append(f"📡 Sources ({search_results['results']['sources']['count']})")
+                            
+                            if result_tab_names:
+                                result_tabs = st.tabs(result_tab_names)
+                                tab_index = 0
+                                
+                                # Messages results
+                                if "messages" in search_results['results'] and search_results['results']["messages"]["count"] > 0:
+                                    with result_tabs[tab_index]:
+                                        display_message_search_results(search_results['results']["messages"]["items"])
+                                    tab_index += 1
+                                
+                                # Keywords results
+                                if "keywords" in search_results['results'] and search_results['results']["keywords"]["count"] > 0:
+                                    with result_tabs[tab_index]:
+                                        display_keyword_search_results(search_results['results']["keywords"]["items"])
+                                    tab_index += 1
+                                
+                                # Candidates results
+                                if "candidates" in search_results['results'] and search_results['results']["candidates"]["count"] > 0:
+                                    with result_tabs[tab_index]:
+                                        display_candidate_search_results(search_results['results']["candidates"]["items"])
+                                    tab_index += 1
+                                
+                                # Sources results
+                                if "sources" in search_results['results'] and search_results['results']["sources"]["count"] > 0:
+                                    with result_tabs[tab_index]:
+                                        display_source_search_results(search_results['results']["sources"]["items"])
+                    
+                    except Exception as e:
+                        st.error(f"Search error: {str(e)}")
+        
+        # Search tips
+        with st.expander("💡 Search Tips", expanded=False):
+            st.markdown("""
+            **Search Tips:**
+            - Use specific keywords for better results (e.g., "immigration policy" vs "immigration")
+            - Combine multiple search types to get comprehensive results
+            - Use date filters to focus on specific time periods
+            - Filter by sentiment to find positive/negative messaging
+            - Use geographic scope to analyze national vs local messaging
+            
+            **Search Examples:**
+            - `"Brexit benefits"` - Find messages about Brexit advantages
+            - `"small business support"` - Search for small business policies
+            - `"net zero"` - Find climate policy discussions
+            - `"NHS reform"` - Search healthcare-related content
+            """)
+    
     # Export functionality
     st.subheader("📊 Export Data")
     
@@ -1367,6 +1534,188 @@ def main():
                 file_name=f"reform_uk_candidates_{datetime.now().strftime('%Y%m%d')}.csv",
                 mime="text/csv"
             )
+
+
+def perform_mock_search(query, search_types, source_types, sentiment_filter, geographic_scope, limit, messages_df, keywords_df, candidates_df):
+    """Mock search function - in production this would call the search API."""
+    start_time = time.time()
+    results = {}
+    total_results = 0
+    
+    query_lower = query.lower()
+    
+    # Search messages
+    if "messages" in search_types:
+        message_results = []
+        if not messages_df.empty:
+            # Filter messages containing the query
+            matching_messages = messages_df[
+                messages_df['content'].str.contains(query_lower, case=False, na=False)
+            ]
+            
+            # Apply additional filters
+            if source_types:
+                matching_messages = matching_messages[
+                    matching_messages['source_type'].isin(source_types)
+                ]
+            
+            if sentiment_filter:
+                # Mock sentiment filtering (in real app, join with sentiment data)
+                pass
+            
+            if geographic_scope:
+                matching_messages = matching_messages[
+                    matching_messages['geographic_scope'] == geographic_scope
+                ]
+            
+            # Convert to result format
+            for _, message in matching_messages.head(limit).iterrows():
+                message_results.append({
+                    'message_id': message.get('message_id', 0),
+                    'content': message['content'][:500] + "..." if len(message['content']) > 500 else message['content'],
+                    'content_preview': message['content'][:200] + "..." if len(message['content']) > 200 else message['content'],
+                    'url': message.get('url'),
+                    'published_at': message.get('published_at'),
+                    'source_name': message.get('source_name', 'Unknown'),
+                    'source_type': message.get('source_type', 'Unknown'),
+                    'relevance_score': 0.8  # Mock relevance
+                })
+        
+        results["messages"] = {
+            "count": len(message_results),
+            "items": message_results
+        }
+        total_results += len(message_results)
+    
+    # Search keywords
+    if "keywords" in search_types:
+        keyword_results = []
+        if not keywords_df.empty:
+            matching_keywords = keywords_df[
+                keywords_df['keyword'].str.contains(query_lower, case=False, na=False)
+            ].head(limit)
+            
+            for _, keyword in matching_keywords.iterrows():
+                keyword_results.append({
+                    'keyword': keyword['keyword'],
+                    'message_count': 5,  # Mock count
+                    'confidence': keyword.get('confidence', 0.8),
+                    'extraction_method': keyword.get('extraction_method', 'nlp')
+                })
+        
+        results["keywords"] = {
+            "count": len(keyword_results),
+            "items": keyword_results
+        }
+        total_results += len(keyword_results)
+    
+    # Search candidates
+    if "candidates" in search_types:
+        candidate_results = []
+        if not candidates_df.empty:
+            matching_candidates = candidates_df[
+                candidates_df['candidate_name'].str.contains(query_lower, case=False, na=False)
+            ].head(limit)
+            
+            for _, candidate in matching_candidates.iterrows():
+                candidate_results.append({
+                    'candidate_id': candidate.get('candidate_id', 0),
+                    'candidate_name': candidate['candidate_name'],
+                    'constituency_name': candidate.get('constituency_name'),
+                    'message_count': 15,  # Mock count
+                    'recent_message_count': 3
+                })
+        
+        results["candidates"] = {
+            "count": len(candidate_results),
+            "items": candidate_results
+        }
+        total_results += len(candidate_results)
+    
+    # Search sources
+    if "sources" in search_types:
+        results["sources"] = {
+            "count": 0,
+            "items": []
+        }
+    
+    search_time_ms = (time.time() - start_time) * 1000
+    
+    return {
+        'query': query,
+        'total_results': total_results,
+        'search_time_ms': search_time_ms,
+        'results': results
+    }
+
+
+def display_message_search_results(message_results):
+    """Display message search results."""
+    st.write(f"Found {len(message_results)} matching messages:")
+    
+    for i, result in enumerate(message_results):
+        with st.expander(f"Message {i+1}: {result['content_preview'][:80]}...", expanded=False):
+            col1, col2 = st.columns([3, 1])
+            
+            with col1:
+                st.write("**Content:**")
+                st.write(result['content'])
+                
+                if result.get('url'):
+                    st.write(f"**URL:** {result['url']}")
+            
+            with col2:
+                st.write(f"**Source:** {result['source_name']}")
+                st.write(f"**Type:** {result['source_type']}")
+                
+                if result.get('published_at'):
+                    st.write(f"**Published:** {result['published_at']}")
+                
+                st.write(f"**Relevance:** {result['relevance_score']:.2f}")
+
+
+def display_keyword_search_results(keyword_results):
+    """Display keyword search results."""
+    st.write(f"Found {len(keyword_results)} matching keywords:")
+    
+    for result in keyword_results:
+        col1, col2, col3 = st.columns([2, 1, 1])
+        
+        with col1:
+            st.write(f"**{result['keyword']}**")
+        
+        with col2:
+            st.write(f"Messages: {result['message_count']}")
+        
+        with col3:
+            st.write(f"Confidence: {result['confidence']:.2f}")
+
+
+def display_candidate_search_results(candidate_results):
+    """Display candidate search results."""
+    st.write(f"Found {len(candidate_results)} matching candidates:")
+    
+    for result in candidate_results:
+        col1, col2, col3 = st.columns([2, 1, 1])
+        
+        with col1:
+            st.write(f"**{result['candidate_name']}**")
+            if result.get('constituency_name'):
+                st.write(f"Constituency: {result['constituency_name']}")
+        
+        with col2:
+            st.write(f"Total Messages: {result['message_count']}")
+        
+        with col3:
+            st.write(f"Recent Messages: {result['recent_message_count']}")
+
+
+def display_source_search_results(source_results):
+    """Display source search results."""
+    st.write(f"Found {len(source_results)} matching sources:")
+    
+    for result in source_results:
+        st.write(f"**{result['source_name']}** ({result['source_type']})")
 
 
 if __name__ == "__main__":

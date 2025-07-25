@@ -24,7 +24,9 @@ from .schemas import (
     EngagementBatchResponse, EngagementOverviewResponse, PlatformPerformanceResponse,
     ViralContentResponse, CandidateEngagementResponse, EngagementTrendsResponse,
     ReportGenerationRequest, IntelligenceReportResponse, ReportListResponse,
-    ReportExportResponse, ReportSectionResponse
+    ReportExportResponse, ReportSectionResponse, SearchRequest, SearchResponse,
+    AutocompleteRequest, AutocompleteResponse, MessageSearchResult, KeywordSearchResult,
+    CandidateSearchResult, SourceSearchResult
 )
 
 router = APIRouter(prefix="/api/v1", tags=["messages"])
@@ -1891,3 +1893,387 @@ async def export_intelligence_report(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error exporting intelligence report: {str(e)}"
         )
+
+
+# ===== SEARCH ENDPOINTS =====
+
+@router.post("/search", tags=["search"])
+def search_content(
+    search_request: SearchRequest,
+    db: Session = Depends(get_session)
+) -> SearchResponse:
+    """
+    Search across messages, keywords, candidates, and sources.
+    
+    Supports full-text search with filters for:
+    - Content type (messages, keywords, candidates, sources)
+    - Source platforms (website, twitter, facebook, meta_ads)
+    - Date ranges
+    - Sentiment filtering
+    - Geographic scope
+    - Specific candidates
+    """
+    start_time = time.time()
+    
+    try:
+        results = {}
+        total_results = 0
+        
+        query_lower = search_request.query.lower()
+        
+        # Search Messages
+        if "messages" in search_request.search_types:
+            message_results = search_messages(db, search_request, query_lower)
+            results["messages"] = {
+                "count": len(message_results),
+                "items": message_results
+            }
+            total_results += len(message_results)
+        
+        # Search Keywords
+        if "keywords" in search_request.search_types:
+            keyword_results = search_keywords(db, search_request, query_lower)
+            results["keywords"] = {
+                "count": len(keyword_results),
+                "items": keyword_results
+            }
+            total_results += len(keyword_results)
+        
+        # Search Candidates
+        if "candidates" in search_request.search_types:
+            candidate_results = search_candidates(db, search_request, query_lower)
+            results["candidates"] = {
+                "count": len(candidate_results),
+                "items": candidate_results
+            }
+            total_results += len(candidate_results)
+        
+        # Search Sources
+        if "sources" in search_request.search_types:
+            source_results = search_sources(db, search_request, query_lower)
+            results["sources"] = {
+                "count": len(source_results),
+                "items": source_results
+            }
+            total_results += len(source_results)
+        
+        search_time_ms = (time.time() - start_time) * 1000
+        
+        return SearchResponse(
+            query=search_request.query,
+            total_results=total_results,
+            search_time_ms=round(search_time_ms, 2),
+            results=results
+        )
+        
+    except Exception as e:
+        logger.error(f"Error performing search: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Search error: {str(e)}"
+        )
+
+
+@router.post("/search/autocomplete", tags=["search"])
+def search_autocomplete(
+    autocomplete_request: AutocompleteRequest,
+    db: Session = Depends(get_session)
+) -> AutocompleteResponse:
+    """
+    Provide autocomplete suggestions for search queries.
+    
+    Returns suggestions based on:
+    - Popular keywords
+    - Candidate names
+    - Source names
+    - Common phrases
+    """
+    try:
+        suggestions = []
+        query_lower = autocomplete_request.query.lower()
+        
+        if autocomplete_request.search_type in ["all", "keywords"]:
+            # Get keyword suggestions
+            keyword_suggestions = db.query(Keyword.keyword, func.count(Keyword.id).label('count'))\
+                .filter(Keyword.keyword.ilike(f'%{query_lower}%'))\
+                .group_by(Keyword.keyword)\
+                .order_by(func.count(Keyword.id).desc())\
+                .limit(autocomplete_request.limit // 2)\
+                .all()
+            
+            for kw, count in keyword_suggestions:
+                suggestions.append({
+                    "text": kw,
+                    "type": "keyword",
+                    "count": count
+                })
+        
+        if autocomplete_request.search_type in ["all", "candidates"]:
+            # Get candidate suggestions
+            candidate_suggestions = db.query(Candidate.name)\
+                .filter(Candidate.name.ilike(f'%{query_lower}%'))\
+                .limit(autocomplete_request.limit // 3)\
+                .all()
+            
+            for (name,) in candidate_suggestions:
+                suggestions.append({
+                    "text": name,
+                    "type": "candidate",
+                    "count": 1
+                })
+        
+        if autocomplete_request.search_type in ["all", "sources"]:
+            # Get source suggestions
+            source_suggestions = db.query(Source.name)\
+                .filter(Source.name.ilike(f'%{query_lower}%'))\
+                .limit(autocomplete_request.limit // 3)\
+                .all()
+            
+            for (name,) in source_suggestions:
+                suggestions.append({
+                    "text": name,
+                    "type": "source", 
+                    "count": 1
+                })
+        
+        # Sort by count and limit
+        suggestions = sorted(suggestions, key=lambda x: x["count"], reverse=True)
+        suggestions = suggestions[:autocomplete_request.limit]
+        
+        return AutocompleteResponse(
+            query=autocomplete_request.query,
+            suggestions=suggestions
+        )
+        
+    except Exception as e:
+        logger.error(f"Error generating autocomplete suggestions: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Autocomplete error: {str(e)}"
+        )
+
+
+def search_messages(db: Session, search_request: SearchRequest, query_lower: str) -> List[MessageSearchResult]:
+    """Search for messages matching the query."""
+    query = db.query(Message).join(Source)
+    
+    # Apply text search
+    query = query.filter(Message.content.ilike(f'%{query_lower}%'))
+    
+    # Apply filters
+    if search_request.source_types:
+        query = query.filter(Source.source_type.in_(search_request.source_types))
+    
+    if search_request.candidate_ids:
+        query = query.filter(Message.candidate_id.in_(search_request.candidate_ids))
+    
+    if search_request.date_from:
+        query = query.filter(Message.published_at >= search_request.date_from)
+    
+    if search_request.date_to:
+        query = query.filter(Message.published_at <= search_request.date_to)
+    
+    if search_request.geographic_scope:
+        query = query.filter(Message.geographic_scope == search_request.geographic_scope)
+    
+    # Add sentiment filter if provided
+    if search_request.sentiment_filter:
+        query = query.join(MessageSentiment, isouter=True)\
+            .filter(MessageSentiment.sentiment_label == search_request.sentiment_filter)
+    
+    # Order by relevance (published date for now, could be enhanced with full-text search scoring)
+    query = query.order_by(Message.published_at.desc())
+    
+    messages = query.limit(search_request.limit).all()
+    
+    results = []
+    for message in messages:
+        # Get keywords for this message
+        keywords = [kw.keyword for kw in message.keywords[:5]]  # Limit to top 5 keywords
+        
+        # Get sentiment data if available
+        sentiment_score = None
+        sentiment_label = None
+        if message.sentiment_analysis:
+            sentiment_score = message.sentiment_analysis.sentiment_score
+            sentiment_label = message.sentiment_analysis.sentiment_label
+        
+        # Calculate relevance score (simple keyword matching for now)
+        relevance_score = calculate_relevance_score(message.content, search_request.query)
+        
+        # Create preview (first 200 chars)
+        content_preview = message.content[:200] + "..." if len(message.content) > 200 else message.content
+        
+        results.append(MessageSearchResult(
+            message_id=message.id,
+            content=message.content[:1000],  # Truncate very long content
+            content_preview=content_preview,
+            url=message.url,
+            published_at=message.published_at,
+            source_name=message.source.name,
+            source_type=message.source.source_type,
+            candidate_name=message.candidate.name if message.candidate else None,
+            message_type=message.message_type,
+            geographic_scope=message.geographic_scope,
+            sentiment_score=sentiment_score,
+            sentiment_label=sentiment_label,
+            keywords=keywords,
+            relevance_score=relevance_score
+        ))
+    
+    # Sort by relevance score
+    results.sort(key=lambda x: x.relevance_score, reverse=True)
+    return results
+
+
+def search_keywords(db: Session, search_request: SearchRequest, query_lower: str) -> List[KeywordSearchResult]:
+    """Search for keywords matching the query."""
+    query = db.query(Keyword.keyword, 
+                    func.count(Keyword.id).label('message_count'),
+                    func.avg(Keyword.confidence).label('avg_confidence'),
+                    Keyword.extraction_method)\
+        .filter(Keyword.keyword.ilike(f'%{query_lower}%'))\
+        .group_by(Keyword.keyword, Keyword.extraction_method)\
+        .order_by(func.count(Keyword.id).desc())\
+        .limit(search_request.limit)
+    
+    keyword_data = query.all()
+    
+    results = []
+    for keyword, message_count, avg_confidence, extraction_method in keyword_data:
+        # Get recent messages with this keyword
+        recent_messages = db.query(Message)\
+            .join(Keyword)\
+            .filter(Keyword.keyword == keyword)\
+            .order_by(Message.published_at.desc())\
+            .limit(3)\
+            .all()
+        
+        recent_messages_data = []
+        for msg in recent_messages:
+            recent_messages_data.append({
+                "message_id": msg.id,
+                "content_preview": msg.content[:100] + "..." if len(msg.content) > 100 else msg.content,
+                "published_at": msg.published_at.isoformat() if msg.published_at else None,
+                "source_name": msg.source.name
+            })
+        
+        results.append(KeywordSearchResult(
+            keyword=keyword,
+            message_count=message_count,
+            confidence=round(avg_confidence or 0.0, 3),
+            extraction_method=extraction_method,
+            recent_messages=recent_messages_data
+        ))
+    
+    return results
+
+
+def search_candidates(db: Session, search_request: SearchRequest, query_lower: str) -> List[CandidateSearchResult]:
+    """Search for candidates matching the query."""
+    query = db.query(Candidate).join(Constituency, isouter=True)\
+        .filter(Candidate.name.ilike(f'%{query_lower}%'))\
+        .limit(search_request.limit)
+    
+    candidates = query.all()
+    
+    results = []
+    for candidate in candidates:
+        # Get message statistics
+        message_count = db.query(func.count(Message.id))\
+            .filter(Message.candidate_id == candidate.id)\
+            .scalar() or 0
+        
+        # Get recent message count (last 30 days)
+        thirty_days_ago = datetime.now() - timedelta(days=30)
+        recent_message_count = db.query(func.count(Message.id))\
+            .filter(Message.candidate_id == candidate.id,
+                   Message.published_at >= thirty_days_ago)\
+            .scalar() or 0
+        
+        # Get average sentiment
+        avg_sentiment = db.query(func.avg(MessageSentiment.sentiment_score))\
+            .join(Message)\
+            .filter(Message.candidate_id == candidate.id)\
+            .scalar()
+        
+        # Get top keywords
+        top_keywords = db.query(Keyword.keyword)\
+            .join(Message)\
+            .filter(Message.candidate_id == candidate.id)\
+            .group_by(Keyword.keyword)\
+            .order_by(func.count(Keyword.id).desc())\
+            .limit(5)\
+            .all()
+        
+        top_keywords_list = [kw[0] for kw in top_keywords]
+        
+        results.append(CandidateSearchResult(
+            candidate_id=candidate.id,
+            candidate_name=candidate.name,
+            constituency_name=candidate.constituency.name if candidate.constituency else None,
+            constituency_region=candidate.constituency.region if candidate.constituency else None,
+            message_count=message_count,
+            recent_message_count=recent_message_count,
+            social_media_accounts=candidate.social_media_accounts,
+            avg_sentiment=round(avg_sentiment, 3) if avg_sentiment else None,
+            top_keywords=top_keywords_list
+        ))
+    
+    return results
+
+
+def search_sources(db: Session, search_request: SearchRequest, query_lower: str) -> List[SourceSearchResult]:
+    """Search for sources matching the query."""
+    query = db.query(Source)\
+        .filter(Source.name.ilike(f'%{query_lower}%'))
+    
+    if search_request.source_types:
+        query = query.filter(Source.source_type.in_(search_request.source_types))
+    
+    sources = query.limit(search_request.limit).all()
+    
+    results = []
+    for source in sources:
+        # Get message count
+        message_count = db.query(func.count(Message.id))\
+            .filter(Message.source_id == source.id)\
+            .scalar() or 0
+        
+        # Get last activity
+        last_activity = db.query(func.max(Message.published_at))\
+            .filter(Message.source_id == source.id)\
+            .scalar()
+        
+        results.append(SourceSearchResult(
+            source_id=source.id,
+            source_name=source.name,
+            source_type=source.source_type,
+            source_url=source.url,
+            message_count=message_count,
+            last_activity=last_activity,
+            active=source.active
+        ))
+    
+    return results
+
+
+def calculate_relevance_score(content: str, query: str) -> float:
+    """Calculate a simple relevance score based on keyword matching."""
+    content_lower = content.lower()
+    query_terms = query.lower().split()
+    
+    total_score = 0.0
+    for term in query_terms:
+        # Count occurrences of each term
+        count = content_lower.count(term)
+        # Weight by term length to favor longer, more specific terms
+        term_weight = len(term) / 10.0
+        total_score += count * term_weight
+    
+    # Normalize by content length to prevent bias toward longer content
+    content_length_factor = min(len(content) / 1000.0, 1.0)
+    relevance_score = total_score / (1.0 + content_length_factor)
+    
+    # Cap at 1.0
+    return min(relevance_score, 1.0)
