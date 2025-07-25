@@ -33,6 +33,13 @@ from src.dashboard.engagement_visualizations import (
     create_engagement_metrics_comparison, display_top_performing_table,
     create_engagement_analysis_controls, create_viral_threshold_selector
 )
+from src.dashboard.intelligence_service import IntelligenceDashboardService
+from src.dashboard.intelligence_visualizations import (
+    create_report_generation_controls, display_report_overview_metrics,
+    create_section_priority_chart, create_data_sources_chart,
+    display_report_content, display_reports_list, create_export_controls,
+    create_time_period_analysis_chart, display_report_comparison
+)
 
 
 st.set_page_config(
@@ -146,7 +153,7 @@ def main():
         return
     
     # Create tabs for different views
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📊 Overview", "🗳️ Constituencies", "👥 Candidates", "🎭 Sentiment Analysis", "📊 Topic Modeling", "⚡ Engagement Analytics"])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["📊 Overview", "🗳️ Constituencies", "👥 Candidates", "🎭 Sentiment Analysis", "📊 Topic Modeling", "⚡ Engagement Analytics", "📈 Intelligence Reports"])
     
     # Sidebar filters
     st.sidebar.header("Filters")
@@ -1119,6 +1126,169 @@ def main():
                         st.rerun()  # Refresh the dashboard
                     else:
                         st.error(result["message"])
+    
+    with tab7:
+        # Intelligence Reports Dashboard
+        st.subheader("📈 Intelligence Reports Dashboard")
+        
+        # Initialize intelligence service
+        intelligence_service = IntelligenceDashboardService()
+        
+        # Report generation section
+        st.markdown("### 🚀 Generate New Report")
+        
+        # Get generation controls
+        generation_settings = create_report_generation_controls()
+        
+        col1, col2 = st.columns([1, 1])
+        
+        with col1:
+            if st.button("🔄 Generate Intelligence Report", type="primary", use_container_width=True):
+                with st.spinner("Generating intelligence report... This may take a few moments."):
+                    report_data = intelligence_service.generate_report(
+                        report_type=generation_settings["report_type"],
+                        time_period_days=generation_settings["time_period_days"],
+                        entity_filter=generation_settings["entity_filter"]
+                    )
+                    
+                    if "error" not in report_data:
+                        st.session_state.current_report = report_data
+                        st.success("✅ Intelligence report generated successfully!")
+                        st.rerun()
+                    else:
+                        st.error(f"❌ Failed to generate report: {report_data.get('error', 'Unknown error')}")
+                        if report_data.get('details'):
+                            st.caption(f"Details: {report_data['details']}")
+        
+        with col2:
+            if st.button("📚 Load Existing Reports", use_container_width=True):
+                st.session_state.show_reports_list = True
+                st.rerun()
+        
+        st.markdown("---")
+        
+        # Display current report if available
+        if hasattr(st.session_state, 'current_report') and st.session_state.current_report:
+            report_data = st.session_state.current_report
+            
+            # Report overview metrics
+            st.markdown("### 📊 Report Overview")
+            display_report_overview_metrics(report_data)
+            
+            # Create analysis charts
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                create_section_priority_chart(report_data)
+            
+            with col2:
+                create_data_sources_chart(report_data)
+            
+            st.markdown("---")
+            
+            # Report content
+            display_report_content(report_data)
+            
+            st.markdown("---")
+            
+            # Export controls
+            create_export_controls(report_data, intelligence_service)
+            
+        elif hasattr(st.session_state, 'show_reports_list') and st.session_state.show_reports_list:
+            # Show existing reports list
+            st.markdown("### 📚 Available Intelligence Reports")
+            
+            reports = intelligence_service.list_reports(limit=20)
+            selected_reports = display_reports_list(reports)
+            
+            if selected_reports:
+                st.markdown("---")
+                
+                if len(selected_reports) == 1:
+                    # Display single selected report
+                    selected_report = selected_reports[0]
+                    report_id = selected_report.get("report_id")
+                    
+                    if report_id:
+                        with st.spinner("Loading report..."):
+                            full_report = intelligence_service.get_report(report_id)
+                            
+                            if full_report:
+                                st.session_state.current_report = full_report
+                                st.session_state.show_reports_list = False
+                                st.rerun()
+                            else:
+                                st.error("Failed to load the selected report.")
+                else:
+                    # Display comparison for multiple reports
+                    st.markdown("### 🔀 Report Comparison")
+                    
+                    # Load full data for selected reports
+                    full_reports = []
+                    for report_summary in selected_reports:
+                        report_id = report_summary.get("report_id")
+                        if report_id:
+                            full_report = intelligence_service.get_report(report_id)
+                            if full_report:
+                                full_reports.append(full_report)
+                    
+                    if full_reports:
+                        display_report_comparison(full_reports)
+                        
+                        # Timeline analysis
+                        create_time_period_analysis_chart(full_reports)
+            
+            # Reset button
+            if st.button("🔄 Back to Report Generation"):
+                if hasattr(st.session_state, 'show_reports_list'):
+                    del st.session_state.show_reports_list
+                st.rerun()
+        
+        else:
+            # Welcome message
+            st.info("""
+            **Welcome to Intelligence Reports!**
+            
+            Generate comprehensive intelligence reports that combine:
+            - 🎭 Sentiment analysis trends and insights
+            - 📊 Topic modeling and issue tracking  
+            - ⚡ Engagement analytics and viral content
+            
+            **Available Report Types:**
+            - 📅 **Daily Brief**: Focused daily intelligence summary
+            - 📊 **Weekly Summary**: Comprehensive weekly analysis
+            - 📈 **Monthly Analysis**: Extended monthly intelligence report
+            - 🏛️ **Campaign Overview**: Complete campaign messaging analysis
+            - 👤 **Candidate Profile**: Individual candidate focus analysis
+            - 🎯 **Issue Tracker**: Topic-specific messaging tracking
+            - ⚖️ **Comparative Analysis**: Multi-entity comparison report
+            
+            Use the controls above to generate your first intelligence report!
+            """)
+            
+            # Show sample metrics if no reports available
+            st.markdown("### 📊 System Overview")
+            
+            with next(get_session()) as db:
+                # Get basic system metrics
+                total_messages = db.query(Message).count()
+                total_sources = db.query(Source).count()
+                total_candidates = db.query(Candidate).count()
+                total_constituencies = db.query(Constituency).count()
+            
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric("Total Messages", total_messages)
+            
+            with col2:
+                st.metric("Data Sources", total_sources)
+            
+            with col3:
+                st.metric("Candidates", total_candidates)
+            
+            with col4:
+                st.metric("Constituencies", total_constituencies)
     
     # Recent messages (outside tabs - global view)
     st.subheader("📝 Recent Messages")
