@@ -8,7 +8,15 @@ from collections import Counter
 import os
 
 from src.database import get_session
-from src.models import Source, Message, Keyword, Constituency, Candidate
+from src.models import Source, Message, Keyword, Constituency, Candidate, MessageSentiment
+from src.dashboard.sentiment_service import SentimentDashboardService
+from src.dashboard.sentiment_visualizations import (
+    display_sentiment_overview_metrics, create_sentiment_distribution_chart,
+    create_political_tone_chart, create_sentiment_trends_chart,
+    create_candidate_sentiment_chart, create_regional_sentiment_chart,
+    create_emotion_analysis_chart, display_detailed_messages_table,
+    create_sentiment_analysis_controls
+)
 
 
 st.set_page_config(
@@ -122,7 +130,7 @@ def main():
         return
     
     # Create tabs for different views
-    tab1, tab2, tab3 = st.tabs(["📊 Overview", "🗳️ Constituencies", "👥 Candidates"])
+    tab1, tab2, tab3, tab4 = st.tabs(["📊 Overview", "🗳️ Constituencies", "👥 Candidates", "🎭 Sentiment Analysis"])
     
     # Sidebar filters
     st.sidebar.header("Filters")
@@ -470,6 +478,199 @@ def main():
                     st.info("No messages found for this candidate")
         else:
             st.info("No candidate data available")
+    
+    with tab4:
+        # Sentiment Analysis Dashboard
+        st.subheader("🎭 Sentiment Analysis Dashboard")
+        
+        # Initialize sentiment service
+        sentiment_service = SentimentDashboardService()
+        
+        # Get sentiment overview
+        with next(get_session()) as db:
+            overview_data = sentiment_service.get_sentiment_overview(db)
+        
+        # Display overview metrics
+        display_sentiment_overview_metrics(overview_data)
+        
+        # Check if we have sentiment data
+        if overview_data["needs_analysis"]:
+            st.warning("⚠️ No sentiment analysis data found. Generate some test data to explore the dashboard features.")
+            
+            # Show controls for generating test data
+            generate_button, analyze_count = create_sentiment_analysis_controls()
+            
+            if generate_button:
+                with st.spinner("Generating dummy sentiment data..."):
+                    with next(get_session()) as db:
+                        result = sentiment_service.generate_dummy_sentiment_batch(db, limit=analyze_count)
+                    
+                    if result["success"]:
+                        st.success(result["message"])
+                        st.rerun()  # Refresh the dashboard
+                    else:
+                        st.error(result["message"])
+        else:
+            # We have sentiment data, show visualizations
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.subheader("📈 Sentiment Distribution")
+                sentiment_chart = create_sentiment_distribution_chart(overview_data)
+                st.plotly_chart(sentiment_chart, use_container_width=True)
+            
+            with col2:
+                st.subheader("🗣️ Political Tone Analysis")
+                with next(get_session()) as db:
+                    tone_data = sentiment_service.get_political_tone_analysis(db)
+                tone_chart = create_political_tone_chart(tone_data)
+                st.plotly_chart(tone_chart, use_container_width=True)
+            
+            # Sentiment trends over time
+            st.subheader("📊 Sentiment Trends Over Time")
+            
+            # Period selector for trends
+            col1, col2 = st.columns([3, 1])
+            with col2:
+                trend_days = st.selectbox(
+                    "Time Period",
+                    options=[7, 14, 30, 60, 90],
+                    index=2,  # Default to 30 days
+                    help="Select number of days for trend analysis"
+                )
+            
+            with next(get_session()) as db:
+                trends_data = sentiment_service.get_sentiment_trends(db, days=trend_days)
+            trends_chart = create_sentiment_trends_chart(trends_data)
+            st.plotly_chart(trends_chart, use_container_width=True)
+            
+            # Candidate and regional analysis
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.subheader("👥 Candidate Sentiment Comparison")
+                with next(get_session()) as db:
+                    candidate_df = sentiment_service.get_candidate_sentiment_comparison(db, limit=15)
+                
+                if not candidate_df.empty:
+                    candidate_chart = create_candidate_sentiment_chart(candidate_df)
+                    st.plotly_chart(candidate_chart, use_container_width=True)
+                    
+                    # Show top candidates table
+                    st.write("**Top Candidates by Message Count:**")
+                    display_df = candidate_df[['candidate_name', 'message_count', 'avg_sentiment', 'positive_pct']].head(10)
+                    display_df.columns = ['Candidate', 'Messages', 'Avg Sentiment', 'Positive %']
+                    st.dataframe(display_df, use_container_width=True, hide_index=True)
+                else:
+                    st.info("No candidate sentiment data available")
+            
+            with col2:
+                st.subheader("🗺️ Regional Sentiment Analysis")
+                with next(get_session()) as db:
+                    regional_df = sentiment_service.get_regional_sentiment_analysis(db)
+                
+                if not regional_df.empty:
+                    regional_chart = create_regional_sentiment_chart(regional_df)
+                    st.plotly_chart(regional_chart, use_container_width=True)
+                    
+                    # Show regional summary table
+                    st.write("**Regional Summary:**")
+                    display_df = regional_df[['region', 'message_count', 'avg_sentiment']].copy()
+                    display_df.columns = ['Region', 'Messages', 'Avg Sentiment']
+                    display_df['Avg Sentiment'] = display_df['Avg Sentiment'].round(3)
+                    st.dataframe(display_df, use_container_width=True, hide_index=True)
+                else:
+                    st.info("No regional sentiment data available")
+            
+            # Emotion analysis
+            st.subheader("😊 Emotional Content Analysis")
+            with next(get_session()) as db:
+                emotion_data = sentiment_service.get_emotion_analysis_data(db)
+            
+            col1, col2 = st.columns([2, 1])
+            
+            with col1:
+                emotion_chart = create_emotion_analysis_chart(emotion_data)
+                st.plotly_chart(emotion_chart, use_container_width=True)
+            
+            with col2:
+                if emotion_data["emotion_totals"]:
+                    st.write("**Emotion Summary:**")
+                    emotion_summary = []
+                    for emotion, avg_score in emotion_data["emotion_averages"].items():
+                        if emotion != 'neutral':
+                            count = emotion_data["emotion_counts"].get(emotion, 0)
+                            emotion_summary.append({
+                                'Emotion': emotion.title(),
+                                'Avg Intensity': f"{avg_score:.3f}",
+                                'Messages': count
+                            })
+                    
+                    if emotion_summary:
+                        emotion_df = pd.DataFrame(emotion_summary)
+                        st.dataframe(emotion_df, use_container_width=True, hide_index=True)
+                    else:
+                        st.info("Only neutral emotions detected")
+                else:
+                    st.info("No emotion data available")
+            
+            # Detailed messages with sentiment
+            st.subheader("📝 Messages with Sentiment Analysis")
+            
+            # Filters for detailed messages
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                sentiment_filter = st.selectbox(
+                    "Filter by Sentiment",
+                    options=["All", "positive", "negative", "neutral"],
+                    help="Filter messages by sentiment classification"
+                )
+            
+            with col2:
+                tone_filter = st.selectbox(
+                    "Filter by Political Tone",
+                    options=["All", "aggressive", "diplomatic", "populist", "nationalist"],
+                    help="Filter messages by political tone"
+                )
+            
+            with col3:
+                message_limit = st.number_input(
+                    "Number of Messages",
+                    min_value=5,
+                    max_value=50,
+                    value=20,
+                    help="Number of messages to display"
+                )
+            
+            # Apply filters
+            sentiment_filter_val = None if sentiment_filter == "All" else sentiment_filter
+            tone_filter_val = None if tone_filter == "All" else tone_filter
+            
+            with next(get_session()) as db:
+                detailed_messages = sentiment_service.get_detailed_messages_with_sentiment(
+                    db,
+                    limit=message_limit,
+                    sentiment_filter=sentiment_filter_val,
+                    tone_filter=tone_filter_val
+                )
+            
+            display_detailed_messages_table(detailed_messages, show_sentiment=True)
+            
+            # Analysis controls at the bottom
+            st.markdown("---")
+            generate_button, analyze_count = create_sentiment_analysis_controls()
+            
+            if generate_button:
+                with st.spinner("Generating additional sentiment data..."):
+                    with next(get_session()) as db:
+                        result = sentiment_service.generate_dummy_sentiment_batch(db, limit=analyze_count)
+                    
+                    if result["success"]:
+                        st.success(result["message"])
+                        st.rerun()  # Refresh the dashboard
+                    else:
+                        st.error(result["message"])
     
     # Recent messages (outside tabs - global view)
     st.subheader("📝 Recent Messages")
