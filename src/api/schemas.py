@@ -67,6 +67,8 @@ class MessageInput(BaseModel):
     url: Optional[str] = Field(None, description="Direct URL to the content")
     published_at: Optional[datetime] = Field(None, description="When content was published")
     message_type: Optional[str] = Field(None, description="Type categorization")
+    candidate_id: Optional[int] = Field(None, description="ID of associated candidate (Phase 2)")
+    geographic_scope: Optional[Literal["national", "regional", "local"]] = Field(None, description="Geographic scope of message")
     metadata: Optional[Dict[str, Any]] = Field(None, description="Source-specific metadata")
     raw_data: Optional[Dict[str, Any]] = Field(None, description="Original API response")
 
@@ -120,6 +122,8 @@ class ScrapedMessage(BaseModel):
     url: Optional[str] = None
     published_at: Optional[datetime] = None
     message_type: Optional[str] = None
+    candidate_id: Optional[int] = None
+    geographic_scope: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
     raw_data: Optional[Dict[str, Any]] = None
 
@@ -133,6 +137,8 @@ class ScrapedMessage(BaseModel):
             url=self.url,
             published_at=self.published_at,
             message_type=self.message_type,
+            candidate_id=self.candidate_id,
+            geographic_scope=self.geographic_scope,
             metadata=self.metadata,
             raw_data=self.raw_data
         )

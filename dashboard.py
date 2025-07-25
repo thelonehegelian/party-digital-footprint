@@ -8,7 +8,7 @@ from collections import Counter
 import os
 
 from src.database import get_session
-from src.models import Source, Message, Keyword
+from src.models import Source, Message, Keyword, Constituency, Candidate
 
 
 st.set_page_config(
@@ -22,11 +22,15 @@ st.set_page_config(
 def load_data():
     """Load data from database with caching."""
     with next(get_session()) as db:
-        # Load messages with source information
-        messages_query = db.query(Message, Source).join(Source).all()
+        # Load messages with source information and candidate/constituency data
+        messages_query = db.query(Message, Source, Candidate, Constituency)\
+            .join(Source)\
+            .outerjoin(Candidate, Message.candidate_id == Candidate.id)\
+            .outerjoin(Constituency, Candidate.constituency_id == Constituency.id)\
+            .all()
         
         messages_data = []
-        for message, source in messages_query:
+        for message, source, candidate, constituency in messages_query:
             messages_data.append({
                 'id': message.id,
                 'content': message.content,
@@ -34,8 +38,14 @@ def load_data():
                 'published_at': message.published_at,
                 'scraped_at': message.scraped_at,
                 'message_type': message.message_type,
+                'geographic_scope': message.geographic_scope,
                 'source_name': source.name,
                 'source_type': source.source_type,
+                'candidate_id': candidate.id if candidate else None,
+                'candidate_name': candidate.name if candidate else None,
+                'constituency_id': constituency.id if constituency else None,
+                'constituency_name': constituency.name if constituency else None,
+                'region': constituency.region if constituency else None,
                 'metadata': message.message_metadata or {}
             })
         
@@ -52,9 +62,37 @@ def load_data():
                 'published_at': message.published_at,
                 'source_type': message.source.source_type
             })
+        
+        # Load constituency and candidate summary data
+        constituencies = db.query(Constituency).all()
+        candidates = db.query(Candidate).all()
+        
+        constituency_data = []
+        for const in constituencies:
+            constituency_data.append({
+                'id': const.id,
+                'name': const.name,
+                'region': const.region,
+                'constituency_type': const.constituency_type,
+                'candidate_count': len(const.candidates)
+            })
+        
+        candidate_data = []
+        for cand in candidates:
+            candidate_data.append({
+                'id': cand.id,
+                'name': cand.name,
+                'constituency_id': cand.constituency_id,
+                'constituency_name': cand.constituency.name if cand.constituency else None,
+                'candidate_type': cand.candidate_type,
+                'message_count': len(cand.messages),
+                'social_media_accounts': cand.social_media_accounts or {}
+            })
     
     messages_df = pd.DataFrame(messages_data)
     keywords_df = pd.DataFrame(keywords_data)
+    constituencies_df = pd.DataFrame(constituency_data)
+    candidates_df = pd.DataFrame(candidate_data)
     
     if not messages_df.empty:
         messages_df['published_at'] = pd.to_datetime(messages_df['published_at'])
@@ -63,12 +101,12 @@ def load_data():
     if not keywords_df.empty:
         keywords_df['published_at'] = pd.to_datetime(keywords_df['published_at'])
     
-    return messages_df, keywords_df
+    return messages_df, keywords_df, constituencies_df, candidates_df
 
 
 def main():
     st.title("🏛️ Reform UK Digital Footprint Analysis")
-    st.markdown("Analysis of Reform UK's digital messaging across platforms")
+    st.markdown("Analysis of Reform UK's digital messaging across platforms and constituencies")
     
     # Add refresh button
     if st.button("🔄 Refresh Data", help="Clear cache and reload data from database"):
@@ -76,12 +114,15 @@ def main():
         st.rerun()
     
     # Load data
-    messages_df, keywords_df = load_data()
+    messages_df, keywords_df, constituencies_df, candidates_df = load_data()
     
     if messages_df.empty:
         st.warning("No data found. Please run the scraper first.")
         st.code("python -m src.scrapers.main")
         return
+    
+    # Create tabs for different views
+    tab1, tab2, tab3 = st.tabs(["📊 Overview", "🗳️ Constituencies", "👥 Candidates"])
     
     # Sidebar filters
     st.sidebar.header("Filters")
@@ -125,107 +166,334 @@ def main():
     if not keywords_df.empty:
         filtered_keywords = filtered_keywords[filtered_keywords['source_type'].isin(source_types)]
     
-    # Main dashboard
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric("Total Messages", len(filtered_messages))
-    
-    with col2:
-        st.metric("Unique Keywords", len(filtered_keywords['keyword'].unique()) if not filtered_keywords.empty else 0)
-    
-    with col3:
-        st.metric("Sources", len(filtered_messages['source_type'].unique()))
-    
-    with col4:
-        avg_daily = len(filtered_messages) / max(1, (filtered_messages['published_at'].max() - filtered_messages['published_at'].min()).days)
-        st.metric("Avg Daily Messages", f"{avg_daily:.1f}")
-    
-    # Charts
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("Messages by Source Type")
-        source_counts = filtered_messages['source_type'].value_counts()
-        fig_pie = px.pie(
-            values=source_counts.values,
-            names=source_counts.index,
-            title="Distribution of Messages by Source"
+    # Phase 2 filters
+    if not constituencies_df.empty:
+        # Region filter
+        regions = st.sidebar.multiselect(
+            "Regions",
+            options=constituencies_df['region'].unique(),
+            default=constituencies_df['region'].unique()
         )
-        st.plotly_chart(fig_pie, use_container_width=True)
-    
-    with col2:
-        st.subheader("Message Types")
-        if 'message_type' in filtered_messages.columns and not filtered_messages['message_type'].isna().all():
-            type_counts = filtered_messages['message_type'].value_counts()
-            fig_bar = px.bar(
-                x=type_counts.values,
-                y=type_counts.index,
-                orientation='h',
-                title="Messages by Type"
+        
+        # Geographic scope filter
+        if not filtered_messages['geographic_scope'].isna().all():
+            geographic_scopes = st.sidebar.multiselect(
+                "Geographic Scope",
+                options=filtered_messages['geographic_scope'].dropna().unique(),
+                default=filtered_messages['geographic_scope'].dropna().unique()
             )
-            st.plotly_chart(fig_bar, use_container_width=True)
-        else:
-            st.info("No message type data available")
-    
-    # Timeline chart
-    st.subheader("Message Frequency Over Time")
-    if filtered_messages['published_at'].notna().any():
-        timeline_data = filtered_messages.groupby([
-            filtered_messages['published_at'].dt.date,
-            'source_type'
-        ]).size().reset_index(name='count')
-        timeline_data.columns = ['date', 'source_type', 'count']
+            filtered_messages = filtered_messages[
+                filtered_messages['geographic_scope'].isin(geographic_scopes) | 
+                filtered_messages['geographic_scope'].isna()
+            ]
         
-        fig_timeline = px.line(
-            timeline_data,
-            x='date',
-            y='count',
-            color='source_type',
-            title="Daily Message Count by Source"
-        )
-        st.plotly_chart(fig_timeline, use_container_width=True)
+        # Filter by selected regions
+        if regions:
+            region_constituencies = constituencies_df[constituencies_df['region'].isin(regions)]['id'].tolist()
+            filtered_messages = filtered_messages[
+                filtered_messages['constituency_id'].isin(region_constituencies) |
+                filtered_messages['constituency_id'].isna()
+            ]
     
-    # Keywords analysis
-    if not filtered_keywords.empty:
-        st.subheader("Top Keywords")
+    with tab1:
+        # Overview Dashboard
+        st.subheader("📊 Overall Statistics")
         
+        col1, col2, col3, col4, col5 = st.columns(5)
+        
+        with col1:
+            st.metric("Total Messages", len(filtered_messages))
+        
+        with col2:
+            st.metric("Unique Keywords", len(filtered_keywords['keyword'].unique()) if not filtered_keywords.empty else 0)
+        
+        with col3:
+            st.metric("Sources", len(filtered_messages['source_type'].unique()))
+        
+        with col4:
+            st.metric("Constituencies", len(constituencies_df))
+        
+        with col5:
+            st.metric("Candidates", len(candidates_df))
+    
+        # Charts
         col1, col2 = st.columns(2)
         
         with col1:
-            top_keywords = filtered_keywords['keyword'].value_counts().head(20)
-            fig_keywords = px.bar(
-                x=top_keywords.values,
-                y=top_keywords.index,
-                orientation='h',
-                title="Most Frequent Keywords"
+            st.subheader("Messages by Source Type")
+            source_counts = filtered_messages['source_type'].value_counts()
+            fig_pie = px.pie(
+                values=source_counts.values,
+                names=source_counts.index,
+                title="Distribution of Messages by Source"
             )
-            fig_keywords.update_layout(height=600)
-            st.plotly_chart(fig_keywords, use_container_width=True)
+            st.plotly_chart(fig_pie, use_container_width=True)
         
         with col2:
-            # Keywords by extraction method
-            method_counts = filtered_keywords['extraction_method'].value_counts()
-            fig_methods = px.pie(
-                values=method_counts.values,
-                names=method_counts.index,
-                title="Keywords by Extraction Method"
+            st.subheader("Geographic Scope Distribution")
+            if not filtered_messages['geographic_scope'].isna().all():
+                scope_counts = filtered_messages['geographic_scope'].value_counts()
+                fig_scope = px.bar(
+                    x=scope_counts.values,
+                    y=scope_counts.index,
+                    orientation='h',
+                    title="Messages by Geographic Scope"
+                )
+                st.plotly_chart(fig_scope, use_container_width=True)
+            else:
+                st.info("No geographic scope data available")
+        
+        # Timeline chart
+        st.subheader("Message Frequency Over Time")
+        if filtered_messages['published_at'].notna().any():
+            timeline_data = filtered_messages.groupby([
+                filtered_messages['published_at'].dt.date,
+                'source_type'
+            ]).size().reset_index(name='count')
+            timeline_data.columns = ['date', 'source_type', 'count']
+            
+            fig_timeline = px.line(
+                timeline_data,
+                x='date',
+                y='count',
+                color='source_type',
+                title="Daily Message Count by Source"
             )
-            st.plotly_chart(fig_methods, use_container_width=True)
+            st.plotly_chart(fig_timeline, use_container_width=True)
+        
+        # Regional distribution
+        if not constituencies_df.empty:
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.subheader("Messages by Region")
+                region_messages = filtered_messages.dropna(subset=['region'])
+                if not region_messages.empty:
+                    region_counts = region_messages['region'].value_counts()
+                    fig_regions = px.bar(
+                        x=region_counts.values,
+                        y=region_counts.index,
+                        orientation='h',
+                        title="Messages by UK Region"
+                    )
+                    st.plotly_chart(fig_regions, use_container_width=True)
+                else:
+                    st.info("No regional message data available")
+            
+            with col2:
+                st.subheader("Constituencies by Region")
+                region_const_counts = constituencies_df['region'].value_counts()
+                fig_const_regions = px.pie(
+                    values=region_const_counts.values,
+                    names=region_const_counts.index,
+                    title="Constituency Distribution by Region"
+                )
+                st.plotly_chart(fig_const_regions, use_container_width=True)
     
-    # Recent messages
-    st.subheader("Recent Messages")
+        # Keywords analysis
+        if not filtered_keywords.empty:
+            st.subheader("Top Keywords")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                top_keywords = filtered_keywords['keyword'].value_counts().head(20)
+                fig_keywords = px.bar(
+                    x=top_keywords.values,
+                    y=top_keywords.index,
+                    orientation='h',
+                    title="Most Frequent Keywords"
+                )
+                fig_keywords.update_layout(height=600)
+                st.plotly_chart(fig_keywords, use_container_width=True)
+            
+            with col2:
+                # Keywords by extraction method
+                method_counts = filtered_keywords['extraction_method'].value_counts()
+                fig_methods = px.pie(
+                    values=method_counts.values,
+                    names=method_counts.index,
+                    title="Keywords by Extraction Method"
+                )
+                st.plotly_chart(fig_methods, use_container_width=True)
+    
+    with tab2:
+        # Constituencies Dashboard
+        st.subheader("🗳️ Constituency Analysis")
+        
+        if not constituencies_df.empty:
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.subheader("Constituency Details")
+                
+                # Constituency selector
+                selected_constituency = st.selectbox(
+                    "Select Constituency",
+                    options=constituencies_df['name'].tolist(),
+                    index=0
+                )
+                
+                const_info = constituencies_df[constituencies_df['name'] == selected_constituency].iloc[0]
+                
+                # Display constituency info
+                st.info(f"""
+                **{const_info['name']}**
+                - Region: {const_info['region']}
+                - Type: {const_info['constituency_type']}
+                - Candidates: {const_info['candidate_count']}
+                """)
+                
+                # Get candidates for this constituency
+                const_candidates = candidates_df[
+                    candidates_df['constituency_name'] == selected_constituency
+                ]
+                
+                if not const_candidates.empty:
+                    st.subheader("Candidates in this Constituency")
+                    for _, candidate in const_candidates.iterrows():
+                        with st.expander(f"{candidate['name']} ({candidate['message_count']} messages)"):
+                            st.write(f"**Type:** {candidate['candidate_type']}")
+                            if candidate['social_media_accounts']:
+                                st.write("**Social Media:**")
+                                for platform, handle in candidate['social_media_accounts'].items():
+                                    st.write(f"- {platform.title()}: {handle}")
+            
+            with col2:
+                st.subheader("Constituency Message Activity")
+                
+                # Messages by constituency
+                const_messages = filtered_messages.dropna(subset=['constituency_name'])
+                if not const_messages.empty:
+                    const_msg_counts = const_messages['constituency_name'].value_counts().head(15)
+                    fig_const_messages = px.bar(
+                        x=const_msg_counts.values,
+                        y=const_msg_counts.index,
+                        orientation='h',
+                        title="Top 15 Constituencies by Message Count"
+                    )
+                    fig_const_messages.update_layout(height=500)
+                    st.plotly_chart(fig_const_messages, use_container_width=True)
+                
+                # Regional breakdown
+                st.subheader("Regional Summary")
+                region_summary = constituencies_df.groupby('region').agg({
+                    'id': 'count',
+                    'candidate_count': 'sum'
+                }).rename(columns={'id': 'constituencies', 'candidate_count': 'total_candidates'})
+                
+                # Add message counts by region
+                if not const_messages.empty:
+                    region_msg_counts = const_messages.groupby('region').size()
+                    region_summary['messages'] = region_summary.index.map(region_msg_counts).fillna(0).astype(int)
+                else:
+                    region_summary['messages'] = 0
+                
+                st.dataframe(region_summary, use_container_width=True)
+        else:
+            st.info("No constituency data available")
+    
+    with tab3:
+        # Candidates Dashboard
+        st.subheader("👥 Candidate Analysis")
+        
+        if not candidates_df.empty:
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.subheader("Top Candidates by Message Volume")
+                
+                # Top candidates by message count
+                top_candidates = candidates_df.nlargest(10, 'message_count')
+                fig_top_candidates = px.bar(
+                    top_candidates,
+                    x='message_count',
+                    y='name',
+                    orientation='h',
+                    title="Top 10 Candidates by Message Count",
+                    hover_data=['constituency_name']
+                )
+                fig_top_candidates.update_layout(height=400)
+                st.plotly_chart(fig_top_candidates, use_container_width=True)
+                
+                # Candidate selector for detailed view
+                st.subheader("Candidate Details")
+                selected_candidate = st.selectbox(
+                    "Select Candidate",
+                    options=candidates_df['name'].tolist(),
+                    index=0
+                )
+                
+                candidate_info = candidates_df[candidates_df['name'] == selected_candidate].iloc[0]
+                
+                st.info(f"""
+                **{candidate_info['name']}**
+                - Constituency: {candidate_info['constituency_name']}
+                - Type: {candidate_info['candidate_type']}
+                - Messages: {candidate_info['message_count']}
+                """)
+                
+                if candidate_info['social_media_accounts']:
+                    st.write("**Social Media Accounts:**")
+                    for platform, handle in candidate_info['social_media_accounts'].items():
+                        st.write(f"- {platform.title()}: {handle}")
+            
+            with col2:
+                st.subheader("Candidate Message Distribution")
+                
+                # Messages by candidate (top 15)
+                candidate_messages = filtered_messages.dropna(subset=['candidate_name'])
+                if not candidate_messages.empty:
+                    cand_msg_counts = candidate_messages['candidate_name'].value_counts().head(15)
+                    fig_cand_messages = px.bar(
+                        x=cand_msg_counts.values,
+                        y=cand_msg_counts.index,
+                        orientation='h',
+                        title="Top 15 Candidates by Message Count"
+                    )
+                    fig_cand_messages.update_layout(height=500)
+                    st.plotly_chart(fig_cand_messages, use_container_width=True)
+                
+                # Recent messages from selected candidate
+                st.subheader(f"Recent Messages from {selected_candidate}")
+                candidate_recent = filtered_messages[
+                    filtered_messages['candidate_name'] == selected_candidate
+                ].sort_values('published_at', ascending=False).head(5)
+                
+                if not candidate_recent.empty:
+                    for _, msg in candidate_recent.iterrows():
+                        with st.expander(f"{msg['published_at'].strftime('%Y-%m-%d') if pd.notna(msg['published_at']) else 'No date'}"):
+                            st.write(msg['content'][:200] + "..." if len(msg['content']) > 200 else msg['content'])
+                            if msg['url']:
+                                st.write(f"[View Original]({msg['url']})")
+                else:
+                    st.info("No messages found for this candidate")
+        else:
+            st.info("No candidate data available")
+    
+    # Recent messages (outside tabs - global view)
+    st.subheader("📝 Recent Messages")
     
     # Sort by published date or scraped date
     sort_column = 'published_at' if filtered_messages['published_at'].notna().any() else 'scraped_at'
     recent_messages = filtered_messages.sort_values(sort_column, ascending=False).head(10)
     
     for idx, message in recent_messages.iterrows():
-        with st.expander(f"{message['source_type'].title()} - {message[sort_column].strftime('%Y-%m-%d %H:%M') if pd.notna(message[sort_column]) else 'No date'}"):
+        candidate_info = f" - {message['candidate_name']}" if pd.notna(message['candidate_name']) else ""
+        constituency_info = f" ({message['constituency_name']})" if pd.notna(message['constituency_name']) else ""
+        
+        title = f"{message['source_type'].title()}{candidate_info}{constituency_info} - {message[sort_column].strftime('%Y-%m-%d %H:%M') if pd.notna(message[sort_column]) else 'No date'}"
+        
+        with st.expander(title):
             st.write(f"**Source:** {message['source_name']}")
+            if pd.notna(message['candidate_name']):
+                st.write(f"**Candidate:** {message['candidate_name']}")
+            if pd.notna(message['constituency_name']):
+                st.write(f"**Constituency:** {message['constituency_name']} ({message['region']})")
             if message['url']:
                 st.write(f"**URL:** {message['url']}")
             st.write(f"**Type:** {message['message_type'] or 'Unknown'}")
+            st.write(f"**Geographic Scope:** {message['geographic_scope'] or 'Unknown'}")
             st.write("**Content:**")
             st.write(message['content'][:500] + "..." if len(message['content']) > 500 else message['content'])
             
@@ -237,9 +505,9 @@ def main():
                         st.write(f"- {key}: {value}")
     
     # Export functionality
-    st.subheader("Export Data")
+    st.subheader("📊 Export Data")
     
-    col1, col2 = st.columns(2)
+    col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         if st.button("Download Messages CSV"):
@@ -258,6 +526,26 @@ def main():
                 label="Download Keywords",
                 data=csv,
                 file_name=f"reform_uk_keywords_{datetime.now().strftime('%Y%m%d')}.csv",
+                mime="text/csv"
+            )
+    
+    with col3:
+        if not constituencies_df.empty and st.button("Download Constituencies CSV"):
+            csv = constituencies_df.to_csv(index=False)
+            st.download_button(
+                label="Download Constituencies",
+                data=csv,
+                file_name=f"reform_uk_constituencies_{datetime.now().strftime('%Y%m%d')}.csv",
+                mime="text/csv"
+            )
+    
+    with col4:
+        if not candidates_df.empty and st.button("Download Candidates CSV"):
+            csv = candidates_df.to_csv(index=False)
+            st.download_button(
+                label="Download Candidates",
+                data=csv,
+                file_name=f"reform_uk_candidates_{datetime.now().strftime('%Y%m%d')}.csv",
                 mime="text/csv"
             )
 

@@ -1,0 +1,182 @@
+[
+  {
+    "id": 1,
+    "name": "Birmingham Edgbaston",
+    "region": "West Midlands",
+    "constituency_type": "county"
+  },
+  {
+    "id": 2,
+    "name": "Manchester Central",
+    "region": "North West",
+    "constituency_type": "county"
+  },
+  {
+    "id": 3,
+    "name": "Newcastle upon Tyne Central",
+    "region": "North East",
+    "constituency_type": "county"
+  },
+  {
+    "id": 4,
+    "name": "Leeds North East",
+    "region": "Yorkshire and The Humber",
+    "constituency_type": "county"
+  },
+  {
+    "id": 5,
+    "name": "Sheffield Hallam",
+    "region": "Yorkshire and The Humber",
+    "constituency_type": "county"
+  },
+  {
+    "id": 6,
+    "name": "Bristol West",
+    "region": "South West",
+    "constituency_type": "county"
+  },
+  {
+    "id": 7,
+    "name": "Brighton Pavilion",
+    "region": "South East",
+    "constituency_type": "county"
+  },
+  {
+    "id": 8,
+    "name": "Cambridge",
+    "region": "East of England",
+    "constituency_type": "county"
+  },
+  {
+    "id": 9,
+    "name": "Oxford East",
+    "region": "South East",
+    "constituency_type": "county"
+  },
+  {
+    "id": 10,
+    "name": "Canterbury",
+    "region": "South East",
+    "constituency_type": "county"
+  },
+  {
+    "id": 11,
+    "name": "Warwick and Leamington",
+    "region": "West Midlands",
+    "constituency_type": "county"
+  },
+  {
+    "id": 12,
+    "name": "Bath",
+    "region": "South West",
+    "constituency_type": "county"
+  },
+  {
+    "id": 13,
+    "name": "Richmond Park",
+    "region": "London",
+    "constituency_type": "district"
+  },
+  {
+    "id": 14,
+    "name": "Putney",
+    "region": "London",
+    "constituency_type": "district"
+  },
+  {
+    "id": 15,
+    "name": "Cities of London and Westminster",
+    "region": "London",
+    "constituency_type": "district"
+  },
+  {
+    "id": 16,
+    "name": "Kensington",
+    "region": "London",
+    "constituency_type": "district"
+  },
+  {
+    "id": 17,
+    "name": "Hackney North and Stoke Newington",
+    "region": "London",
+    "constituency_type": "district"
+  },
+  {
+    "id": 18,
+    "name": "Islington North",
+    "region": "London",
+    "constituency_type": "district"
+  },
+  {
+    "id": 19,
+    "name": "Hampstead and Kilburn",
+    "region": "London",
+    "constituency_type": "district"
+  },
+  {
+    "id": 20,
+    "name": "Chingford and Woodford Green",
+    "region": "London",
+    "constituency_type": "district"
+  },
+  {
+    "id": 21,
+    "name": "Cardiff Central",
+    "region": "Wales",
+    "constituency_type": "unitary"
+  },
+  {
+    "id": 22,
+    "name": "Swansea West",
+    "region": "Wales",
+    "constituency_type": "unitary"
+  },
+  {
+    "id": 23,
+    "name": "Wrexham",
+    "region": "Wales",
+    "constituency_type": "unitary"
+  },
+  {
+    "id": 24,
+    "name": "Edinburgh Central",
+    "region": "Scotland",
+    "constituency_type": "unitary"
+  },
+  {
+    "id": 25,
+    "name": "Glasgow Central",
+    "region": "Scotland",
+    "constituency_type": "unitary"
+  },
+  {
+    "id": 26,
+    "name": "Aberdeen North",
+    "region": "Scotland",
+    "constituency_type": "unitary"
+  },
+  {
+    "id": 27,
+    "name": "Dundee West",
+    "region": "Scotland",
+    "constituency_type": "unitary"
+  },
+  {
+    "id": 28,
+    "name": "Stirling",
+    "region": "Scotland",
+    "constituency_type": "unitary"
+  },
+  {
+    "id": 29,
+    "name": "Belfast South",
+    "region": "Northern Ireland",
+    "constituency_type": "district"
+  },
+  {
+    "id": 30,
+    "name": "North Down",
+    "region": "Northern Ireland",
+    "constituency_type": "district"
+  }
+]

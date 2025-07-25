@@ -1,12 +1,12 @@
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from loguru import logger
 
 from ..database import get_session
-from ..models import Source, Message, Keyword
+from ..models import Source, Message, Keyword, Constituency, Candidate
 from ..nlp.processor import BasicNLPProcessor
 from .schemas import (
     MessageInput, BulkMessageInput, MessageResponse, 
@@ -92,12 +92,26 @@ def check_duplicate_message(db: Session, source_id: int, content: str, url: str 
     return existing
 
 
-@router.post("/messages/single", response_model=MessageResponse)
+@router.post("/messages/single", response_model=MessageResponse, tags=["messages"])
 async def submit_single_message(
     message_data: MessageInput,
     db: Session = Depends(get_session)
 ):
-    """Submit a single message for analysis."""
+    """
+    Submit a single political message for analysis.
+    
+    Processes and stores a single message with the following features:
+    - Automatic source creation/linking
+    - Candidate association (Phase 2)
+    - NLP keyword extraction
+    - Duplicate detection
+    - Geographic scope classification
+    
+    **Returns:**
+    - Success/warning status
+    - Message ID for reference
+    - Number of keywords extracted
+    """
     try:
         # Get or create source
         source = get_or_create_source(
@@ -125,10 +139,12 @@ async def submit_single_message(
         # Create new message
         message = Message(
             source_id=source.id,
+            candidate_id=message_data.candidate_id,
             content=message_data.content,
             url=message_data.url,
             published_at=message_data.published_at,
             message_type=message_data.message_type,
+            geographic_scope=message_data.geographic_scope,
             message_metadata=message_data.metadata,
             raw_data=message_data.raw_data,
             scraped_at=datetime.now()
@@ -157,12 +173,28 @@ async def submit_single_message(
         )
 
 
-@router.post("/messages/bulk", response_model=BulkMessageResponse)
+@router.post("/messages/bulk", response_model=BulkMessageResponse, tags=["messages"])
 async def submit_bulk_messages(
     bulk_data: BulkMessageInput,
     db: Session = Depends(get_session)
 ):
-    """Submit multiple messages for analysis."""
+    """
+    Submit multiple political messages for bulk analysis.
+    
+    Efficiently processes up to 100 messages with:
+    - Batch processing with error handling
+    - Individual message validation
+    - Automatic source management
+    - Candidate association (Phase 2)
+    - Bulk keyword extraction
+    - Comprehensive error reporting
+    
+    **Returns:**
+    - Overall processing status (success/partial/error)
+    - Count of imported vs skipped messages
+    - Detailed error information for failed messages
+    - Total keywords extracted
+    """
     imported_count = 0
     skipped_count = 0
     total_keywords = 0
@@ -194,10 +226,12 @@ async def submit_bulk_messages(
                 # Create new message
                 message = Message(
                     source_id=source.id,
+                    candidate_id=message_data.candidate_id,
                     content=message_data.content,
                     url=message_data.url,
                     published_at=message_data.published_at,
                     message_type=message_data.message_type,
+                    geographic_scope=message_data.geographic_scope,
                     message_metadata=message_data.metadata,
                     raw_data=message_data.raw_data,
                     scraped_at=datetime.now()
@@ -247,9 +281,17 @@ async def submit_bulk_messages(
         )
 
 
-@router.get("/sources")
+@router.get("/sources", tags=["sources"])
 async def list_sources(db: Session = Depends(get_session)):
-    """List all configured sources."""
+    """
+    List all configured data sources.
+    
+    Returns information about all configured data sources including:
+    - Source name and type (twitter, facebook, website, meta_ads)
+    - Source URL and activity status
+    - Last scraping timestamp
+    - Total message count per source
+    """
     sources = db.query(Source).all()
     return [
         {
@@ -265,12 +307,23 @@ async def list_sources(db: Session = Depends(get_session)):
     ]
 
 
-@router.get("/messages/stats")
+@router.get("/messages/stats", tags=["statistics"])
 async def get_message_stats(db: Session = Depends(get_session)):
-    """Get overall message statistics."""
+    """
+    Get comprehensive system statistics.
+    
+    Returns overall statistics including:
+    - Total counts: messages, keywords, sources, constituencies, candidates
+    - Message distribution by source type (twitter, facebook, website, etc.)
+    - Geographic distribution by scope (national, regional, local)
+    
+    This endpoint provides key metrics for Phase 2 analytics and reporting.
+    """
     total_messages = db.query(Message).count()
     total_keywords = db.query(Keyword).count()
     total_sources = db.query(Source).count()
+    total_constituencies = db.query(Constituency).count()
+    total_candidates = db.query(Candidate).count()
     
     # Messages by source type
     source_stats = db.query(Source.source_type, func.count(Message.id))\
@@ -278,9 +331,138 @@ async def get_message_stats(db: Session = Depends(get_session)):
         .group_by(Source.source_type)\
         .all()
     
+    # Messages by geographic scope (Phase 2)
+    geographic_stats = db.query(Message.geographic_scope, func.count(Message.id))\
+        .filter(Message.geographic_scope.isnot(None))\
+        .group_by(Message.geographic_scope)\
+        .all()
+    
     return {
         "total_messages": total_messages,
         "total_keywords": total_keywords,
         "total_sources": total_sources,
-        "by_source_type": dict(source_stats)
+        "total_constituencies": total_constituencies,
+        "total_candidates": total_candidates,
+        "by_source_type": dict(source_stats),
+        "by_geographic_scope": dict(geographic_stats)
+    }
+
+
+@router.get("/constituencies", tags=["constituencies"])
+async def list_constituencies(db: Session = Depends(get_session)):
+    """
+    List all UK constituencies with candidate counts.
+    
+    Returns constituency information including:
+    - Constituency name and ID
+    - UK region (England, Scotland, Wales, Northern Ireland)
+    - Constituency type (county, district, unitary)
+    - Number of Reform UK candidates
+    
+    This endpoint supports Phase 2 geographic analysis features.
+    """
+    constituencies = db.query(Constituency).all()
+    return [
+        {
+            "id": const.id,
+            "name": const.name,
+            "region": const.region,
+            "constituency_type": const.constituency_type,
+            "candidate_count": len(const.candidates)
+        }
+        for const in constituencies
+    ]
+
+
+@router.get("/candidates", tags=["candidates"])
+async def list_candidates(
+    constituency_id: Optional[int] = None,
+    db: Session = Depends(get_session)
+):
+    """
+    List Reform UK candidates with their messaging activity.
+    
+    Returns candidate information including:
+    - Candidate name and ID
+    - Associated constituency and region
+    - Social media account handles (Twitter, Facebook)
+    - Candidate type (local, national, both)
+    - Total message count
+    
+    **Parameters:**
+    - `constituency_id` (optional): Filter candidates by specific constituency
+    
+    This endpoint enables Phase 2 candidate-level analysis and social media tracking.
+    """
+    query = db.query(Candidate)
+    
+    if constituency_id:
+        query = query.filter(Candidate.constituency_id == constituency_id)
+    
+    candidates = query.all()
+    
+    return [
+        {
+            "id": cand.id,
+            "name": cand.name,
+            "constituency_id": cand.constituency_id,
+            "constituency_name": cand.constituency.name if cand.constituency else None,
+            "social_media_accounts": cand.social_media_accounts,
+            "candidate_type": cand.candidate_type,
+            "message_count": len(cand.messages)
+        }
+        for cand in candidates
+    ]
+
+
+@router.get("/candidates/{candidate_id}/messages", tags=["candidates"])
+async def get_candidate_messages(
+    candidate_id: int,
+    db: Session = Depends(get_session)
+):
+    """
+    Get all messages for a specific Reform UK candidate.
+    
+    Returns detailed messaging activity for an individual candidate including:
+    - Full candidate profile information
+    - All messages with content preview (truncated to 200 chars)
+    - Message metadata (URL, publish date, type, geographic scope)
+    - Source information (platform, account name)
+    
+    **Parameters:**
+    - `candidate_id`: Unique identifier for the candidate
+    
+    **Errors:**
+    - `404`: Candidate not found
+    
+    This endpoint is essential for Phase 2 candidate-level message analysis.
+    """
+    candidate = db.query(Candidate).filter(Candidate.id == candidate_id).first()
+    
+    if not candidate:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Candidate not found"
+        )
+    
+    messages = db.query(Message).filter(Message.candidate_id == candidate_id).all()
+    
+    return {
+        "candidate": {
+            "id": candidate.id,
+            "name": candidate.name,
+            "constituency_name": candidate.constituency.name if candidate.constituency else None
+        },
+        "messages": [
+            {
+                "id": msg.id,
+                "content": msg.content[:200] + "..." if len(msg.content) > 200 else msg.content,
+                "url": msg.url,
+                "published_at": msg.published_at,
+                "message_type": msg.message_type,
+                "geographic_scope": msg.geographic_scope,
+                "source_name": msg.source.name if msg.source else None
+            }
+            for msg in messages
+        ]
     }

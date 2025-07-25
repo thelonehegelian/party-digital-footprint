@@ -19,9 +19,39 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Reform UK Messaging Analysis API",
-    description="API for submitting and analyzing political messaging data",
-    version="1.0.0",
-    lifespan=lifespan
+    description="""
+    ## Reform UK Digital Footprint Analysis API
+    
+    This API enables submission and analysis of political messaging data from Reform UK's digital platforms.
+    
+    ### Features
+    - **Message Processing**: Submit individual or bulk political messages for analysis
+    - **Constituency Analysis**: Access UK constituency data and candidate information
+    - **Candidate Tracking**: Monitor individual candidate messaging across platforms
+    - **Keyword Extraction**: Automatic NLP-based keyword and theme extraction
+    - **Geographic Analysis**: Messages categorized by geographic scope (national, regional, local)
+    
+    ### Data Sources Supported
+    - Twitter/X posts
+    - Facebook posts
+    - Website articles
+    - Meta Ad Library advertisements
+    
+    ### Phase 2 Features
+    - Constituency-level analysis across UK regions
+    - Individual candidate message tracking
+    - Social media account linking
+    - Geographic message distribution
+    """,
+    version="2.0.0",
+    lifespan=lifespan,
+    contact={
+        "name": "Campaign Labs",
+        "url": "https://github.com/your-org/party-digital-footprint",
+    },
+    license_info={
+        "name": "MIT License",
+    }
 )
 
 # CORS middleware

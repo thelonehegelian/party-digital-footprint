@@ -1,0 +1,472 @@
+[
+  {
+    "id": 1,
+    "name": "Daniel Young",
+    "constituency_id": 1,
+    "social_media_accounts": {
+      "twitter": "@reformdanielyoung",
+      "facebook": "https://facebook.com/danielyoungreform"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 2,
+    "name": "Sharon Taylor",
+    "constituency_id": 2,
+    "social_media_accounts": {
+      "twitter": "@sharontaylor15",
+      "facebook": "https://facebook.com/staylor"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 3,
+    "name": "Karen Allen",
+    "constituency_id": 3,
+    "social_media_accounts": {
+      "twitter": "@karenallen",
+      "facebook": "https://facebook.com/karenallenreform"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 4,
+    "name": "Nancy Garcia",
+    "constituency_id": 4,
+    "social_media_accounts": {
+      "twitter": "@nancygarcia",
+      "facebook": "https://facebook.com/nancygarcia"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 5,
+    "name": "Ronald Jackson",
+    "constituency_id": 5,
+    "social_media_accounts": {
+      "twitter": "@ronaldjackson",
+      "facebook": "https://facebook.com/rjackson"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 6,
+    "name": "Andrew Wood",
+    "constituency_id": 5,
+    "social_media_accounts": {
+      "twitter": "@awood",
+      "facebook": "https://facebook.com/reformandrewwood"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 7,
+    "name": "Thomas Martin",
+    "constituency_id": 6,
+    "social_media_accounts": {
+      "twitter": "@thomasmartin31",
+      "facebook": "https://facebook.com/thomasmartin"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 8,
+    "name": "Lisa King",
+    "constituency_id": 7,
+    "social_media_accounts": {
+      "twitter": "@lisaking",
+      "facebook": "https://facebook.com/lisaking"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 9,
+    "name": "Edward Moore",
+    "constituency_id": 7,
+    "social_media_accounts": {
+      "twitter": "@edwardmoore40",
+      "facebook": "https://facebook.com/emoore"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 10,
+    "name": "Barbara Wilson",
+    "constituency_id": 8,
+    "social_media_accounts": {
+      "twitter": "@barbarawilsonreform",
+      "facebook": "https://facebook.com/bwilson"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 11,
+    "name": "Dorothy Garcia",
+    "constituency_id": 9,
+    "social_media_accounts": {
+      "twitter": "@dorothygarcia49",
+      "facebook": "https://facebook.com/reformdorothygarcia"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 12,
+    "name": "Sandra White",
+    "constituency_id": 9,
+    "social_media_accounts": {
+      "twitter": "@reformsandrawhite",
+      "facebook": "https://facebook.com/sandrawhitereform"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 13,
+    "name": "Brian White",
+    "constituency_id": 10,
+    "social_media_accounts": {
+      "twitter": "@brianwhite",
+      "facebook": "https://facebook.com/brianwhite"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 14,
+    "name": "Richard Anderson",
+    "constituency_id": 10,
+    "social_media_accounts": {
+      "twitter": "@richardanderson",
+      "facebook": "https://facebook.com/richardanderson4"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 15,
+    "name": "Karen Clarke",
+    "constituency_id": 11,
+    "social_media_accounts": {
+      "twitter": "@kclarke",
+      "facebook": "https://facebook.com/karenclarke"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 16,
+    "name": "James King",
+    "constituency_id": 11,
+    "social_media_accounts": {
+      "twitter": "@jamesking",
+      "facebook": "https://facebook.com/jameskingreform"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 17,
+    "name": "Thomas Clarke",
+    "constituency_id": 12,
+    "social_media_accounts": {
+      "twitter": "@thomasclarkereform",
+      "facebook": "https://facebook.com/reformthomasclarke"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 18,
+    "name": "Anthony Perez",
+    "constituency_id": 13,
+    "social_media_accounts": {
+      "twitter": "@anthonyperezreform",
+      "facebook": "https://facebook.com/reformanthonyperez"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 19,
+    "name": "Ronald Martin",
+    "constituency_id": 14,
+    "social_media_accounts": {
+      "twitter": "@ronaldmartinreform",
+      "facebook": "https://facebook.com/ronaldmartin10"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 20,
+    "name": "William Wood",
+    "constituency_id": 14,
+    "social_media_accounts": {
+      "twitter": "@williamwood17",
+      "facebook": "https://facebook.com/reformwilliamwood"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 21,
+    "name": "Elizabeth Roberts",
+    "constituency_id": 15,
+    "social_media_accounts": {
+      "twitter": "@elizabethroberts77",
+      "facebook": "https://facebook.com/elizabethroberts"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 22,
+    "name": "Barbara Allen",
+    "constituency_id": 15,
+    "social_media_accounts": {
+      "twitter": "@reformbarbaraallen",
+      "facebook": "https://facebook.com/barbaraallenreform"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 23,
+    "name": "Thomas Roberts",
+    "constituency_id": 16,
+    "social_media_accounts": {
+      "twitter": "@reformthomasroberts",
+      "facebook": "https://facebook.com/reformthomasroberts"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 24,
+    "name": "Dorothy Thomas",
+    "constituency_id": 17,
+    "social_media_accounts": {
+      "twitter": "@dorothythomasreform",
+      "facebook": "https://facebook.com/dthomas"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 25,
+    "name": "Karen Jones",
+    "constituency_id": 18,
+    "social_media_accounts": {
+      "twitter": "@kjones",
+      "facebook": "https://facebook.com/kjones"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 26,
+    "name": "Barbara Smith",
+    "constituency_id": 18,
+    "social_media_accounts": {
+      "twitter": "@barbarasmith13",
+      "facebook": "https://facebook.com/barbarasmith"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 27,
+    "name": "William Roberts",
+    "constituency_id": 19,
+    "social_media_accounts": {
+      "twitter": "@wroberts",
+      "facebook": "https://facebook.com/williamroberts"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 28,
+    "name": "Nancy Harris",
+    "constituency_id": 20,
+    "social_media_accounts": {
+      "twitter": "@nharris",
+      "facebook": "https://facebook.com/reformnancyharris"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 29,
+    "name": "Ronald Davis",
+    "constituency_id": 20,
+    "social_media_accounts": {
+      "twitter": "@ronalddavis",
+      "facebook": "https://facebook.com/reformronalddavis"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 30,
+    "name": "William Perez",
+    "constituency_id": 21,
+    "social_media_accounts": {
+      "twitter": "@williamperez75",
+      "facebook": "https://facebook.com/williamperezreform"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 31,
+    "name": "Patricia Davis",
+    "constituency_id": 21,
+    "social_media_accounts": {
+      "twitter": "@reformpatriciadavis",
+      "facebook": "https://facebook.com/patriciadavisreform"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 32,
+    "name": "Brian Wilson",
+    "constituency_id": 22,
+    "social_media_accounts": {
+      "twitter": "@brianwilsonreform",
+      "facebook": "https://facebook.com/brianwilson"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 33,
+    "name": "Barbara Thompson",
+    "constituency_id": 23,
+    "social_media_accounts": {
+      "twitter": "@barbarathompson",
+      "facebook": "https://facebook.com/barbarathompsonreform"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 34,
+    "name": "Thomas Johnson",
+    "constituency_id": 23,
+    "social_media_accounts": {
+      "twitter": "@thomasjohnson",
+      "facebook": "https://facebook.com/thomasjohnsonreform"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 35,
+    "name": "Christopher Johnson",
+    "constituency_id": 24,
+    "social_media_accounts": {
+      "twitter": "@cjohnson",
+      "facebook": "https://facebook.com/christopherjohnson"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 36,
+    "name": "David Thompson",
+    "constituency_id": 24,
+    "social_media_accounts": {
+      "twitter": "@reformdavidthompson",
+      "facebook": "https://facebook.com/davidthompson"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 37,
+    "name": "Andrew Allen",
+    "constituency_id": 25,
+    "social_media_accounts": {
+      "twitter": "@andrewallen",
+      "facebook": "https://facebook.com/reformandrewallen"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 38,
+    "name": "Susan Phillips",
+    "constituency_id": 26,
+    "social_media_accounts": {
+      "twitter": "@susanphillips40",
+      "facebook": "https://facebook.com/sphillips"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 39,
+    "name": "Barbara Young",
+    "constituency_id": 26,
+    "social_media_accounts": {
+      "twitter": "@barbarayoung87",
+      "facebook": "https://facebook.com/barbarayoung87"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 40,
+    "name": "Jennifer Turner",
+    "constituency_id": 27,
+    "social_media_accounts": {
+      "twitter": "@jenniferturner",
+      "facebook": "https://facebook.com/jenniferturnerreform"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 41,
+    "name": "Steven Phillips",
+    "constituency_id": 27,
+    "social_media_accounts": {
+      "twitter": "@reformstevenphillips",
+      "facebook": "https://facebook.com/sphillips"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 42,
+    "name": "Andrew Mitchell",
+    "constituency_id": 28,
+    "social_media_accounts": {
+      "twitter": "@andrewmitchell",
+      "facebook": "https://facebook.com/andrewmitchell"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 43,
+    "name": "Ronald Hill",
+    "constituency_id": 28,
+    "social_media_accounts": {
+      "twitter": "@reformronaldhill",
+      "facebook": "https://facebook.com/reformronaldhill"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 44,
+    "name": "Dorothy Wilson",
+    "constituency_id": 29,
+    "social_media_accounts": {
+      "twitter": "@dorothywilson42",
+      "facebook": "https://facebook.com/dwilson"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 45,
+    "name": "Ruth Mitchell",
+    "constituency_id": 29,
+    "social_media_accounts": {
+      "twitter": "@ruthmitchell14",
+      "facebook": "https://facebook.com/reformruthmitchell"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 46,
+    "name": "Elizabeth Turner",
+    "constituency_id": 30,
+    "social_media_accounts": {
+      "twitter": "@eturner",
+      "facebook": "https://facebook.com/elizabethturner"
+    },
+    "candidate_type": "local"
+  },
+  {
+    "id": 47,
+    "name": "Christopher Anderson",
+    "constituency_id": 30,
+    "social_media_accounts": {
+      "twitter": "@christopheranderson5",
+      "facebook": "https://facebook.com/canderson"
+    },
+    "candidate_type": "local"
+  }
+]
