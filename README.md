@@ -1,6 +1,6 @@
-# Political Digital Footprint Analysis
+# Multi-Party Political Messaging Analytics
 
-A comprehensive data collection and analysis platform for political messaging across multiple platforms during campaigns and ongoing political communications.
+A comprehensive analytics platform for political messaging across multiple platforms, supporting analysis of any political party or organization's digital footprint and communications strategy.
 
 ## Overview
 

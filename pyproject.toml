@@ -1,7 +1,7 @@
 [project]
-name = "reform-uk-messaging"
+name = "political-messaging-analytics"
 version = "0.1.0"
-description = "Reform UK digital footprint analysis and messaging collection"
+description = "Multi-party political messaging analytics and digital footprint analysis platform"
 authors = [
     { name = "Campaign Labs", email = "info@campaignlabs.com" }
 ]

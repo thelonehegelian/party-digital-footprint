@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a comprehensive political digital footprint analysis platform designed to analyze messaging patterns across multiple platforms during political campaigns. The project provides advanced analytics including sentiment analysis, topic modeling, engagement metrics, and intelligence report generation.
+This is a comprehensive multi-party political messaging analytics platform designed to analyze messaging patterns across multiple platforms for any political party or organization. The project provides advanced analytics including sentiment analysis, topic modeling, engagement metrics, and intelligence report generation with full multi-party support.
 
 ## Tech Stack
 
@@ -225,12 +225,13 @@ streamlit run dashboard.py --server.headless true
 
 ## Data Sources
 
-The project focuses on Reform UK's digital presence:
-- Official website (reformparty.uk)
-- Twitter/X (@reformparty_uk)
-- Facebook official pages
-- Meta Ad Library for political advertisements
+The platform supports data collection from multiple sources for any political party:
+- Party websites and official platforms
+- Social media accounts (Twitter/X, Facebook, Instagram)
+- Political advertisement databases (Meta Ad Library, etc.)
 - Individual candidate social media accounts
+- Press releases and official communications
+- Custom data sources via API integration
 
 ## Security Considerations
 
