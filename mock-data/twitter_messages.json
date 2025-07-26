@@ -1,185 +1,140 @@
 [
   {
-    "content": "🚨 BREAKING: Immigration figures show record highs while British families struggle with housing and jobs. When will this government put Britain first? We need controlled immigration that works for everyone. #BritainFirst #Immigration #ReformUK",
-    "url": "https://twitter.com/reformparty_uk/status/1780234567890123456",
-    "published_at": "2024-04-16T14:23:00Z",
-    "message_type": "post",
+    "content": "🌱 Our community energy initiative is already creating jobs and cutting bills! 20 pilot communities are leading the way to energy independence. #CommunityPower #GreenJobs #ClimateAction",
+    "url": "https://twitter.com/greenparty/status/1234567890",
+    "published_at": "2024-01-15T14:30:00Z",
+    "message_type": "social_post",
     "metadata": {
-      "hashtags": ["BritainFirst", "Immigration", "ReformUK"],
+      "hashtags": ["CommunityPower", "GreenJobs", "ClimateAction"],
       "mentions": [],
       "urls": [],
+      "media_urls": ["https://pbs.twimg.com/media/example1.jpg"],
       "metrics": {
-        "retweet_count": 245,
-        "like_count": 892,
-        "reply_count": 134,
-        "quote_count": 78
+        "retweets": 245,
+        "likes": 892,
+        "replies": 67
       },
-      "tweet_type": "post"
+      "tweet_type": "original"
     },
     "raw_data": {
-      "tweet_id": "1780234567890123456",
-      "author_id": "123456789",
+      "tweet_id": "1234567890",
+      "author": "@greenparty",
       "scraper": "twitter"
     }
   },
   {
-    "content": "The NHS waiting lists are a national scandal. 7.6 million people waiting for treatment while bureaucrats get pay rises. We need radical reform, not more excuses. Patients before politics! 🏥 #NHS #HealthReform #PatientsFirst",
-    "url": "https://twitter.com/reformparty_uk/status/1779876543210987654",
-    "published_at": "2024-04-15T11:45:00Z",
-    "message_type": "post",
+    "content": "Working families deserve better. Our tax reform package will put an extra £2,000 back in your pocket each year while supporting small businesses. It's time for real change. 💪 #TaxReform #WorkingFamilies",
+    "url": "https://twitter.com/conservativealliance/status/1234567891",
+    "published_at": "2024-01-14T11:15:00Z", 
+    "message_type": "social_post",
     "metadata": {
-      "hashtags": ["NHS", "HealthReform", "PatientsFirst"],
+      "hashtags": ["TaxReform", "WorkingFamilies"],
       "mentions": [],
-      "urls": [],
+      "urls": ["https://t.co/example"],
+      "media_urls": [],
       "metrics": {
-        "retweet_count": 187,
-        "like_count": 654,
-        "reply_count": 89,
-        "quote_count": 45
+        "retweets": 187,
+        "likes": 634,
+        "replies": 89
       },
-      "tweet_type": "post"
+      "tweet_type": "original"
     },
     "raw_data": {
-      "tweet_id": "1779876543210987654",
-      "author_id": "123456789",
+      "tweet_id": "1234567891",
+      "author": "@conservativealliance",
       "scraper": "twitter"
     }
   },
   {
-    "content": "Energy bills through the roof while we sit on vast North Sea resources. Net Zero zealots would rather we freeze than drill. Common sense energy policy needed NOW! ⚡ #EnergyIndependence #NetZero #CommonSense",
-    "url": "https://twitter.com/reformparty_uk/status/1779543216789012345",
-    "published_at": "2024-04-14T18:12:00Z",
-    "message_type": "post",
+    "content": "The NHS crisis requires urgent action. Our plan to recruit 50,000 more nurses and 10,000 doctors will get waiting lists down and improve care for everyone. Healthcare is a human right. 🏥❤️",
+    "url": "https://twitter.com/libdems/status/1234567892",
+    "published_at": "2024-01-13T09:45:00Z",
+    "message_type": "social_post",
     "metadata": {
-      "hashtags": ["EnergyIndependence", "NetZero", "CommonSense"],
+      "hashtags": ["NHS", "Healthcare"],
       "mentions": [],
       "urls": [],
+      "media_urls": [],
       "metrics": {
-        "retweet_count": 312,
-        "like_count": 1156,
-        "reply_count": 203,
-        "quote_count": 91
+        "retweets": 312,
+        "likes": 1247,
+        "replies": 156
       },
-      "tweet_type": "post"
+      "tweet_type": "original"
     },
     "raw_data": {
-      "tweet_id": "1779543216789012345",
-      "author_id": "123456789",
+      "tweet_id": "1234567892", 
+      "author": "@libdems",
       "scraper": "twitter"
     }
   },
   {
-    "content": "Young people can't buy homes because of planning bureaucracy and mass immigration driving up demand. Time to reform the system and build for Britain! 🏠 #Housing #PlanningReform #YoungPeople",
-    "url": "https://twitter.com/reformparty_uk/status/1779123456789012346",
-    "published_at": "2024-04-13T09:34:00Z",
-    "message_type": "post",
+    "content": "🚀 Excited to meet with tech innovators in Manchester today! Our climate plan will create millions of green jobs while building the industries of tomorrow. Innovation + sustainability = prosperity! #GreenTech #ClimateJobs",
+    "url": "https://twitter.com/progressiveparty/status/1234567893",
+    "published_at": "2024-01-12T16:20:00Z",
+    "message_type": "social_post",
     "metadata": {
-      "hashtags": ["Housing", "PlanningReform", "YoungPeople"],
+      "hashtags": ["GreenTech", "ClimateJobs"],
       "mentions": [],
       "urls": [],
+      "media_urls": ["https://pbs.twimg.com/media/example2.jpg"],
       "metrics": {
-        "retweet_count": 156,
-        "like_count": 523,
-        "reply_count": 67,
-        "quote_count": 34
+        "retweets": 156,
+        "likes": 523,
+        "replies": 43
       },
-      "tweet_type": "post"
+      "tweet_type": "original"
     },
     "raw_data": {
-      "tweet_id": "1779123456789012346",
-      "author_id": "123456789",
+      "tweet_id": "1234567893",
+      "author": "@progressiveparty",
       "scraper": "twitter"
     }
   },
   {
-    "content": "Brexit gave us sovereignty. Now let's use it! Scrap EU regulations, cut red tape, and unleash British business. The establishment doesn't want change - we do! 🇬🇧 #Brexit #Sovereignty #Business #EstablishmentElites",
-    "url": "https://twitter.com/reformparty_uk/status/1778789012345678901",
-    "published_at": "2024-04-12T15:20:00Z",
-    "message_type": "post",
+    "content": "Democracy works best when everyone has a voice. Our constitutional reforms will ensure every vote counts and make government more accountable to the people. Time to modernize our institutions! 🗳️✊",
+    "url": "https://twitter.com/unitymovement/status/1234567894",
+    "published_at": "2024-01-11T13:10:00Z",
+    "message_type": "social_post",
     "metadata": {
-      "hashtags": ["Brexit", "Sovereignty", "Business", "EstablishmentElites"],
+      "hashtags": ["Democracy", "ConstitutionalReform", "VoteReform"],
       "mentions": [],
-      "urls": [],
+      "urls": ["https://t.co/reforms"],
+      "media_urls": [],
       "metrics": {
-        "retweet_count": 278,
-        "like_count": 945,
-        "reply_count": 156,
-        "quote_count": 67
+        "retweets": 93,
+        "likes": 387,
+        "replies": 72
       },
-      "tweet_type": "post"
+      "tweet_type": "original"
     },
     "raw_data": {
-      "tweet_id": "1778789012345678901",
-      "author_id": "123456789",
+      "tweet_id": "1234567894",
+      "author": "@unitymovement", 
       "scraper": "twitter"
     }
   },
   {
-    "content": "While crime rises and police numbers fall, they're more interested in pronoun training than catching criminals. Law and order must come first! 👮‍♂️ #LawAndOrder #Police #Crime #CommonSense",
-    "url": "https://twitter.com/reformparty_uk/status/1778456789012345678",
-    "published_at": "2024-04-11T12:55:00Z",
-    "message_type": "post",
+    "content": "RT @citizen_activist: The housing crisis affects us all. We need bold solutions, not more empty promises. #HousingCrisis #AffordableHomes",
+    "url": "https://twitter.com/progressiveparty/status/1234567895",
+    "published_at": "2024-01-10T10:25:00Z",
+    "message_type": "social_post",
     "metadata": {
-      "hashtags": ["LawAndOrder", "Police", "Crime", "CommonSense"],
-      "mentions": [],
+      "hashtags": ["HousingCrisis", "AffordableHomes"],
+      "mentions": ["@citizen_activist"],
       "urls": [],
+      "media_urls": [],
       "metrics": {
-        "retweet_count": 423,
-        "like_count": 1234,
-        "reply_count": 245,
-        "quote_count": 112
+        "retweets": 67,
+        "likes": 234,
+        "replies": 28
       },
-      "tweet_type": "post"
+      "tweet_type": "retweet"
     },
     "raw_data": {
-      "tweet_id": "1778456789012345678",
-      "author_id": "123456789",
-      "scraper": "twitter"
-    }
-  },
-  {
-    "content": "Our schools are failing our children while teachers push woke ideology instead of education. Back to basics: reading, writing, arithmetic! 📚 #Education #BackToBasics #WokeIdeology #Children",
-    "url": "https://twitter.com/reformparty_uk/status/1778123456789012347",
-    "published_at": "2024-04-10T16:40:00Z",
-    "message_type": "post",
-    "metadata": {
-      "hashtags": ["Education", "BackToBasics", "WokeIdeology", "Children"],
-      "mentions": [],
-      "urls": [],
-      "metrics": {
-        "retweet_count": 189,
-        "like_count": 678,
-        "reply_count": 134,
-        "quote_count": 56
-      },
-      "tweet_type": "post"
-    },
-    "raw_data": {
-      "tweet_id": "1778123456789012347",
-      "author_id": "123456789",
-      "scraper": "twitter"
-    }
-  },
-  {
-    "content": "Pensioners choosing between heating and eating while foreign aid billions flow overseas. Charity begins at home! Time to prioritize British pensioners. 👵👴 #Pensioners #ForeignAid #CharityBeginsAtHome",
-    "url": "https://twitter.com/reformparty_uk/status/1777789012345678902",
-    "published_at": "2024-04-09T10:15:00Z",
-    "message_type": "post",
-    "metadata": {
-      "hashtags": ["Pensioners", "ForeignAid", "CharityBeginsAtHome"],
-      "mentions": [],
-      "urls": [],
-      "metrics": {
-        "retweet_count": 334,
-        "like_count": 1098,
-        "reply_count": 178,
-        "quote_count": 89
-      },
-      "tweet_type": "post"
-    },
-    "raw_data": {
-      "tweet_id": "1777789012345678902",
-      "author_id": "123456789",
+      "tweet_id": "1234567895",
+      "author": "@progressiveparty",
+      "original_author": "@citizen_activist",
       "scraper": "twitter"
     }
   }

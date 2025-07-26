@@ -34,7 +34,7 @@
     "name": "Sandra Smith",
     "constituency_id": 3,
     "social_media_accounts": {
-      "twitter": "@reformsandrasmith",
+      "twitter": "@sandrasmith",
       "facebook": "https://facebook.com/ssmith"
     },
     "candidate_type": "local"
@@ -45,7 +45,7 @@
     "constituency_id": 3,
     "social_media_accounts": {
       "twitter": "@paulwhite97",
-      "facebook": "https://facebook.com/paulwhitereform"
+      "facebook": "https://facebook.com/paulwhite"
     },
     "candidate_type": "local"
   },
@@ -54,7 +54,7 @@
     "name": "Barbara Adams",
     "constituency_id": 4,
     "social_media_accounts": {
-      "twitter": "@reformbarbaraadams",
+      "twitter": "@barbaraadams",
       "facebook": "https://facebook.com/badams"
     },
     "candidate_type": "local"
@@ -64,7 +64,7 @@
     "name": "Mary Turner",
     "constituency_id": 5,
     "social_media_accounts": {
-      "twitter": "@reformmaryturner",
+      "twitter": "@maryturner",
       "facebook": "https://facebook.com/maryturner22"
     },
     "candidate_type": "local"
@@ -74,8 +74,8 @@
     "name": "Jennifer Roberts",
     "constituency_id": 5,
     "social_media_accounts": {
-      "twitter": "@jenniferrobertsreform",
-      "facebook": "https://facebook.com/jenniferrobertsreform"
+      "twitter": "@jenniferroberts",
+      "facebook": "https://facebook.com/jenniferroberts"
     },
     "candidate_type": "local"
   },
@@ -84,8 +84,8 @@
     "name": "Anthony White",
     "constituency_id": 6,
     "social_media_accounts": {
-      "twitter": "@anthonywhitereform",
-      "facebook": "https://facebook.com/reformanthonywhite"
+      "twitter": "@anthonywhite",
+      "facebook": "https://facebook.com/anthonywhite"
     },
     "candidate_type": "local"
   },
@@ -104,8 +104,8 @@
     "name": "Michael Gonzalez",
     "constituency_id": 7,
     "social_media_accounts": {
-      "twitter": "@reformmichaelgonzalez",
-      "facebook": "https://facebook.com/michaelgonzalezreform"
+      "twitter": "@michaelgonzalez",
+      "facebook": "https://facebook.com/michaelgonzalez"
     },
     "candidate_type": "local"
   },
@@ -114,7 +114,7 @@
     "name": "Nancy Thomas",
     "constituency_id": 8,
     "social_media_accounts": {
-      "twitter": "@nancythomasreform",
+      "twitter": "@nancythomas",
       "facebook": "https://facebook.com/nthomas"
     },
     "candidate_type": "local"
@@ -124,7 +124,7 @@
     "name": "Sharon Turner",
     "constituency_id": 8,
     "social_media_accounts": {
-      "twitter": "@reformsharonturner",
+      "twitter": "@sharonturner",
       "facebook": "https://facebook.com/sharonturner89"
     },
     "candidate_type": "local"
@@ -134,7 +134,7 @@
     "name": "Kenneth Jackson",
     "constituency_id": 9,
     "social_media_accounts": {
-      "twitter": "@reformkennethjackson",
+      "twitter": "@kennethjackson",
       "facebook": "https://facebook.com/kennethjackson"
     },
     "candidate_type": "local"
@@ -145,7 +145,7 @@
     "constituency_id": 10,
     "social_media_accounts": {
       "twitter": "@bettyroberts",
-      "facebook": "https://facebook.com/bettyrobertsreform"
+      "facebook": "https://facebook.com/bettyroberts"
     },
     "candidate_type": "local"
   },
@@ -154,8 +154,8 @@
     "name": "Mary Brown",
     "constituency_id": 10,
     "social_media_accounts": {
-      "twitter": "@reformmarybrown",
-      "facebook": "https://facebook.com/marybrownreform"
+      "twitter": "@marybrown",
+      "facebook": "https://facebook.com/marybrown"
     },
     "candidate_type": "local"
   },
@@ -185,7 +185,7 @@
     "constituency_id": 13,
     "social_media_accounts": {
       "twitter": "@kevinanderson21",
-      "facebook": "https://facebook.com/reformkevinanderson"
+      "facebook": "https://facebook.com/kevinanderson"
     },
     "candidate_type": "local"
   },
@@ -194,8 +194,8 @@
     "name": "Patricia Perez",
     "constituency_id": 14,
     "social_media_accounts": {
-      "twitter": "@patriciaperezreform",
-      "facebook": "https://facebook.com/patriciaperezreform"
+      "twitter": "@patriciaperez",
+      "facebook": "https://facebook.com/patriciaperez"
     },
     "candidate_type": "local"
   },
@@ -204,8 +204,8 @@
     "name": "James Smith",
     "constituency_id": 14,
     "social_media_accounts": {
-      "twitter": "@reformjamessmith",
-      "facebook": "https://facebook.com/jamessmithreform"
+      "twitter": "@jamessmith",
+      "facebook": "https://facebook.com/jamessmith"
     },
     "candidate_type": "local"
   },
@@ -215,7 +215,7 @@
     "constituency_id": 15,
     "social_media_accounts": {
       "twitter": "@marysmith",
-      "facebook": "https://facebook.com/marysmithreform"
+      "facebook": "https://facebook.com/marysmith"
     },
     "candidate_type": "local"
   },
@@ -224,8 +224,8 @@
     "name": "Lisa Baker",
     "constituency_id": 15,
     "social_media_accounts": {
-      "twitter": "@reformlisabaker",
-      "facebook": "https://facebook.com/reformlisabaker"
+      "twitter": "@lisabaker",
+      "facebook": "https://facebook.com/lisabaker"
     },
     "candidate_type": "local"
   },
@@ -235,7 +235,7 @@
     "constituency_id": 16,
     "social_media_accounts": {
       "twitter": "@ronaldroberts",
-      "facebook": "https://facebook.com/reformronaldroberts"
+      "facebook": "https://facebook.com/ronaldroberts"
     },
     "candidate_type": "local"
   },
@@ -254,8 +254,8 @@
     "name": "Brian Carter",
     "constituency_id": 17,
     "social_media_accounts": {
-      "twitter": "@reformbriancarter",
-      "facebook": "https://facebook.com/briancarterreform"
+      "twitter": "@briancarter",
+      "facebook": "https://facebook.com/briancarter"
     },
     "candidate_type": "local"
   },
@@ -274,7 +274,7 @@
     "name": "David Jackson",
     "constituency_id": 18,
     "social_media_accounts": {
-      "twitter": "@reformdavidjackson",
+      "twitter": "@davidjackson",
       "facebook": "https://facebook.com/davidjackson11"
     },
     "candidate_type": "local"
@@ -285,7 +285,7 @@
     "constituency_id": 19,
     "social_media_accounts": {
       "twitter": "@mmoore",
-      "facebook": "https://facebook.com/markmoorereform"
+      "facebook": "https://facebook.com/markmoore"
     },
     "candidate_type": "local"
   },
@@ -295,7 +295,7 @@
     "constituency_id": 19,
     "social_media_accounts": {
       "twitter": "@johnroberts",
-      "facebook": "https://facebook.com/johnrobertsreform"
+      "facebook": "https://facebook.com/johnroberts"
     },
     "candidate_type": "local"
   },
@@ -314,7 +314,7 @@
     "name": "Brian Johnson",
     "constituency_id": 21,
     "social_media_accounts": {
-      "twitter": "@reformbrianjohnson",
+      "twitter": "@brianjohnson",
       "facebook": "https://facebook.com/bjohnson"
     },
     "candidate_type": "local"
@@ -345,7 +345,7 @@
     "constituency_id": 24,
     "social_media_accounts": {
       "twitter": "@thomasbrown",
-      "facebook": "https://facebook.com/reformthomasbrown"
+      "facebook": "https://facebook.com/thomasbrown"
     },
     "candidate_type": "local"
   },
@@ -355,7 +355,7 @@
     "constituency_id": 24,
     "social_media_accounts": {
       "twitter": "@eharris",
-      "facebook": "https://facebook.com/elizabethharrisreform"
+      "facebook": "https://facebook.com/elizabethharris"
     },
     "candidate_type": "local"
   },
@@ -364,7 +364,7 @@
     "name": "Nancy Johnson",
     "constituency_id": 25,
     "social_media_accounts": {
-      "twitter": "@nancyjohnsonreform",
+      "twitter": "@nancyjohnson",
       "facebook": "https://facebook.com/nancyjohnson"
     },
     "candidate_type": "local"
@@ -385,7 +385,7 @@
     "constituency_id": 26,
     "social_media_accounts": {
       "twitter": "@sandrahill",
-      "facebook": "https://facebook.com/reformsandrahill"
+      "facebook": "https://facebook.com/sandrahill"
     },
     "candidate_type": "local"
   },
@@ -394,8 +394,8 @@
     "name": "Anthony Mitchell",
     "constituency_id": 27,
     "social_media_accounts": {
-      "twitter": "@reformanthonymitchell",
-      "facebook": "https://facebook.com/reformanthonymitchell"
+      "twitter": "@anthonymitchell",
+      "facebook": "https://facebook.com/anthonymitchell"
     },
     "candidate_type": "local"
   },
@@ -434,7 +434,7 @@
     "name": "Thomas Brown",
     "constituency_id": 30,
     "social_media_accounts": {
-      "twitter": "@reformthomasbrown",
+      "twitter": "@thomasbrown",
       "facebook": "https://facebook.com/thomasbrown"
     },
     "candidate_type": "local"

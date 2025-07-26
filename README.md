@@ -289,10 +289,10 @@ flake8 src/ scripts/
 
 The `mock-data/` folder contains realistic sample data for testing:
 
-- **website_messages.json**: Reform UK website articles and press releases
-- **twitter_messages.json**: Twitter posts with engagement metrics
-- **facebook_messages.json**: Facebook posts with emojis and engagement
-- **meta_ads_messages.json**: Political advertisements with targeting data
+- **website_messages.json**: Multi-party website articles and press releases
+- **twitter_messages.json**: Twitter posts from various parties with engagement metrics
+- **facebook_messages.json**: Facebook posts from different parties with emojis and engagement
+- **meta_ads_messages.json**: Political advertisements from multiple parties with targeting data
 
 This allows you to test the complete system without API credentials.
 
