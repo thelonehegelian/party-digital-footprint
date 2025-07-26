@@ -853,10 +853,11 @@ async def analyze_batch_sentiment(
 @router.get("/analytics/sentiment/trends", response_model=SentimentTrendsResponse, tags=["analytics"])
 async def get_sentiment_trends(
     days: int = 7,
+    party_id: int = Query(None, description="Filter by political party ID"),
     db: Session = Depends(get_session)
 ):
     """
-    Get sentiment trends over time for Reform UK messaging.
+    Get sentiment trends over time for political party messaging.
     
     Analyzes sentiment patterns across time periods with:
     - Daily sentiment averages and message counts
@@ -877,7 +878,7 @@ async def get_sentiment_trends(
         if days > 90:
             days = 90
             
-        trends_data = sentiment_analyzer.get_sentiment_trends(db, days=days)
+        trends_data = sentiment_analyzer.get_sentiment_trends(db, days=days, party_id=party_id)
         
         return SentimentTrendsResponse(
             period_days=trends_data['period_days'],
@@ -894,7 +895,10 @@ async def get_sentiment_trends(
 
 
 @router.get("/analytics/sentiment/stats", tags=["analytics"])
-async def get_sentiment_statistics(db: Session = Depends(get_session)):
+async def get_sentiment_statistics(
+    party_id: int = Query(None, description="Filter by political party ID"),
+    db: Session = Depends(get_session)
+):
     """
     Get comprehensive sentiment analysis statistics.
     
@@ -912,8 +916,12 @@ async def get_sentiment_statistics(db: Session = Depends(get_session)):
     """
     try:
         # Basic counts
-        total_analyzed = db.query(MessageSentiment).count()
-        total_messages = db.query(Message).count()
+        if party_id:
+            total_analyzed = db.query(MessageSentiment).join(Message).filter(Message.party_id == party_id).count()
+            total_messages = db.query(Message).filter(Message.party_id == party_id).count()
+        else:
+            total_analyzed = db.query(MessageSentiment).count()
+            total_messages = db.query(Message).count()
         
         if total_analyzed == 0:
             return {
@@ -927,20 +935,32 @@ async def get_sentiment_statistics(db: Session = Depends(get_session)):
             }
         
         # Sentiment distribution
-        sentiment_dist = db.query(
+        sentiment_query = db.query(
             MessageSentiment.sentiment_label,
             func.count(MessageSentiment.id)
-        ).group_by(MessageSentiment.sentiment_label).all()
+        )
+        if party_id:
+            sentiment_query = sentiment_query.join(Message).filter(Message.party_id == party_id)
+        sentiment_dist = sentiment_query.group_by(MessageSentiment.sentiment_label).all()
         
         # Political tone distribution
-        tone_dist = db.query(
+        tone_query = db.query(
             MessageSentiment.political_tone,
             func.count(MessageSentiment.id)
-        ).group_by(MessageSentiment.political_tone).all()
+        )
+        if party_id:
+            tone_query = tone_query.join(Message).filter(Message.party_id == party_id)
+        tone_dist = tone_query.group_by(MessageSentiment.political_tone).all()
         
         # Average scores
-        avg_sentiment = db.query(func.avg(MessageSentiment.sentiment_score)).scalar() or 0.0
-        avg_confidence = db.query(func.avg(MessageSentiment.confidence)).scalar() or 0.0
+        avg_sentiment_query = db.query(func.avg(MessageSentiment.sentiment_score))
+        avg_confidence_query = db.query(func.avg(MessageSentiment.confidence))
+        if party_id:
+            avg_sentiment_query = avg_sentiment_query.join(Message).filter(Message.party_id == party_id)
+            avg_confidence_query = avg_confidence_query.join(Message).filter(Message.party_id == party_id)
+        
+        avg_sentiment = avg_sentiment_query.scalar() or 0.0
+        avg_confidence = avg_confidence_query.scalar() or 0.0
         
         return {
             "total_messages": total_messages,
@@ -1203,7 +1223,10 @@ async def analyze_batch_topics(
 
 
 @router.get("/analytics/topics/overview", response_model=TopicOverviewResponse, tags=["analytics"])
-async def get_topic_overview(db: Session = Depends(get_session)):
+async def get_topic_overview(
+    party_id: int = Query(None, description="Filter by political party ID"),
+    db: Session = Depends(get_session)
+):
     """
     Get comprehensive topic modeling overview.
     
