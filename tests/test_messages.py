@@ -15,11 +15,12 @@ class TestMessageSubmission:
         self, 
         api_client: requests.Session, 
         api_base_url: str, 
-        sample_message_data: Dict[str, Any]
+        sample_message_data: Dict[str, Any],
+        test_party_id: int
     ):
         """Test successful single message submission."""
         response = api_client.post(
-            f"{api_base_url}/api/v1/messages/single",
+            f"{api_base_url}/api/v1/messages/single?party_id={test_party_id}",
             json=sample_message_data
         )
         
@@ -38,12 +39,13 @@ class TestMessageSubmission:
         self, 
         api_client: requests.Session, 
         api_base_url: str, 
-        sample_message_data: Dict[str, Any]
+        sample_message_data: Dict[str, Any],
+        test_party_id: int
     ):
         """Test duplicate message handling."""
         # Submit the same message twice
-        api_client.post(f"{api_base_url}/api/v1/messages/single", json=sample_message_data)
-        response = api_client.post(f"{api_base_url}/api/v1/messages/single", json=sample_message_data)
+        api_client.post(f"{api_base_url}/api/v1/messages/single?party_id={test_party_id}", json=sample_message_data)
+        response = api_client.post(f"{api_base_url}/api/v1/messages/single?party_id={test_party_id}", json=sample_message_data)
         
         assert response.status_code == 200
         data = response.json()
@@ -90,11 +92,12 @@ class TestMessageSubmission:
         self, 
         api_client: requests.Session, 
         api_base_url: str, 
-        sample_bulk_messages: Dict[str, Any]
+        sample_bulk_messages: Dict[str, Any],
+        test_party_id: int
     ):
         """Test successful bulk message submission."""
         response = api_client.post(
-            f"{api_base_url}/api/v1/messages/bulk",
+            f"{api_base_url}/api/v1/messages/bulk?party_id={test_party_id}",
             json=sample_bulk_messages
         )
         
@@ -114,13 +117,14 @@ class TestMessageSubmission:
     def test_submit_bulk_messages_empty_list(
         self, 
         api_client: requests.Session, 
-        api_base_url: str
+        api_base_url: str,
+        test_party_id: int
     ):
         """Test bulk submission with empty message list."""
         empty_bulk = {"messages": []}
         
         response = api_client.post(
-            f"{api_base_url}/api/v1/messages/bulk",
+            f"{api_base_url}/api/v1/messages/bulk?party_id={test_party_id}",
             json=empty_bulk
         )
         
@@ -162,11 +166,12 @@ class TestMessageSubmission:
         self, 
         api_client: requests.Session, 
         api_base_url: str, 
-        sample_candidate_message: Dict[str, Any]
+        sample_candidate_message: Dict[str, Any],
+        test_party_id: int
     ):
         """Test submitting a message with candidate association (Phase 2)."""
         response = api_client.post(
-            f"{api_base_url}/api/v1/messages/single",
+            f"{api_base_url}/api/v1/messages/single?party_id={test_party_id}",
             json=sample_candidate_message
         )
         
@@ -183,7 +188,8 @@ class TestMessageValidation:
         self, 
         api_client: requests.Session, 
         api_base_url: str, 
-        sample_message_data: Dict[str, Any]
+        sample_message_data: Dict[str, Any],
+        test_party_id: int
     ):
         """Test message content length handling."""
         # Test very long content
@@ -191,7 +197,7 @@ class TestMessageValidation:
         long_message["content"] = "A" * 10000  # Very long content
         
         response = api_client.post(
-            f"{api_base_url}/api/v1/messages/single",
+            f"{api_base_url}/api/v1/messages/single?party_id={test_party_id}",
             json=long_message
         )
         
@@ -201,7 +207,8 @@ class TestMessageValidation:
         self, 
         api_client: requests.Session, 
         api_base_url: str, 
-        sample_message_data: Dict[str, Any]
+        sample_message_data: Dict[str, Any],
+        test_party_id: int
     ):
         """Test handling of special characters and emojis."""
         special_message = sample_message_data.copy()
@@ -209,7 +216,7 @@ class TestMessageValidation:
         special_message["url"] = "https://test.com/special/chars?param=value&other=123"
         
         response = api_client.post(
-            f"{api_base_url}/api/v1/messages/single",
+            f"{api_base_url}/api/v1/messages/single?party_id={test_party_id}",
             json=special_message
         )
         

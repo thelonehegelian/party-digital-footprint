@@ -1,5 +1,5 @@
 """
-Edge case and stress tests for the Reform UK Messaging API.
+Edge case and stress tests for the Political Messaging Analysis API.
 """
 
 import pytest
@@ -17,7 +17,8 @@ class TestEdgeCases:
         self, 
         api_client: requests.Session, 
         api_base_url: str, 
-        sample_message_data: Dict[str, Any]
+        sample_message_data: Dict[str, Any],
+        test_party_id: int
     ):
         """Test handling of extremely long message content."""
         long_message = sample_message_data.copy()
@@ -25,7 +26,7 @@ class TestEdgeCases:
         long_message["url"] = "https://test.com/long-content"
         
         response = api_client.post(
-            f"{api_base_url}/api/v1/messages/single",
+            f"{api_base_url}/api/v1/messages/single?party_id={test_party_id}",
             json=long_message
         )
         
@@ -36,18 +37,19 @@ class TestEdgeCases:
         self, 
         api_client: requests.Session, 
         api_base_url: str, 
-        sample_message_data: Dict[str, Any]
+        sample_message_data: Dict[str, Any],
+        test_party_id: int
     ):
         """Test handling of Unicode and special characters."""
         unicode_message = sample_message_data.copy()
         unicode_message["content"] = (
-            "🇬🇧 Reform UK: Testing émojis, açcénts, 中文, العربية, ελληνικά, русский! "
+            "🇬🇧 Progressive Party: Testing émojis, açcénts, 中文, العربية, ελληνικά, русский! "
             "Special chars: @#$%^&*()_+{}|:<>?[]\\;'\",./ ~`"
         )
         unicode_message["url"] = "https://test.com/unicode-test"
         
         response = api_client.post(
-            f"{api_base_url}/api/v1/messages/single",
+            f"{api_base_url}/api/v1/messages/single?party_id={test_party_id}",
             json=unicode_message
         )
         

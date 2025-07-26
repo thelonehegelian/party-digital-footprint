@@ -18,11 +18,11 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Reform UK Messaging Analysis API",
+    title="Political Messaging Analysis API",
     description="""
-    ## Reform UK Digital Footprint Analysis API
+    ## Multi-Party Political Messaging Analysis API
     
-    This API enables submission and analysis of political messaging data from Reform UK's digital platforms.
+    This API enables submission and analysis of political messaging data from multiple political parties and organizations.
     
     ### Features
     - **Message Processing**: Submit individual or bulk political messages for analysis

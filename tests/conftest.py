@@ -1,5 +1,5 @@
 """
-Test configuration and fixtures for the Reform UK Messaging API tests.
+Test configuration and fixtures for the Political Messaging Analysis API tests.
 """
 
 import pytest
@@ -37,19 +37,70 @@ def api_client(api_base_url: str) -> Generator[requests.Session, None, None]:
 
 
 @pytest.fixture
+def sample_party_data() -> dict:
+    """Sample party data for testing."""
+    return {
+        "name": "Test Progressive Party",
+        "short_name": "TPP",
+        "description": "A test party for automated testing",
+        "country": "UK",
+        "party_type": "political",
+        "founded_year": 2024,
+        "headquarters": "London, UK",
+        "website_url": "https://testprogressive.org",
+        "social_media_accounts": {
+            "twitter": "@testprogressive",
+            "facebook": "https://facebook.com/testprogressive"
+        },
+        "branding_config": {
+            "primary_color": "#2E8B57",
+            "logo_url": "https://testprogressive.org/logo.png"
+        }
+    }
+
+
+@pytest.fixture
+def test_party_id(api_client: requests.Session, api_base_url: str, sample_party_data: dict) -> int:
+    """Create a test party and return its ID."""
+    # First, check if the party already exists
+    response = api_client.get(f"{api_base_url}/api/v1/parties")
+    if response.status_code == 200:
+        parties = response.json()
+        for party in parties:
+            if party["name"] == sample_party_data["name"]:
+                return party["id"]
+    
+    # Try to create a party if it doesn't exist
+    response = api_client.post(f"{api_base_url}/api/v1/parties", json=sample_party_data)
+    if response.status_code == 201:
+        return response.json()["id"]
+    elif response.status_code in [409, 422, 500]:  # Various error codes for existing party
+        # Get existing party again
+        response = api_client.get(f"{api_base_url}/api/v1/parties")
+        if response.status_code == 200:
+            parties = response.json()
+            for party in parties:
+                if party["name"] == sample_party_data["name"]:
+                    return party["id"]
+    
+    # If we can't create or find the party, skip tests
+    pytest.skip("Could not create or find test party")
+
+
+@pytest.fixture
 def sample_message_data() -> dict:
     """Sample message data for testing."""
     return {
         "source_type": "twitter",
-        "source_name": "Test Reform UK Twitter",
-        "source_url": "https://twitter.com/test_reform",
-        "content": "Test message: Reform UK stands for common sense policies! #ReformUK #TestMessage",
-        "url": "https://twitter.com/test_reform/status/123456789",
+        "source_name": "Test Progressive Party Twitter",
+        "source_url": "https://twitter.com/test_progressive",
+        "content": "Test message: Progressive Party stands for sustainable policies! #ProgressiveParty #TestMessage",
+        "url": "https://twitter.com/test_progressive/status/123456789",
         "published_at": "2024-04-20T12:00:00Z",
         "message_type": "post",
         "geographic_scope": "national",
         "metadata": {
-            "hashtags": ["ReformUK", "TestMessage"],
+            "hashtags": ["ProgressiveParty", "TestMessage"],
             "metrics": {
                 "retweet_count": 25,
                 "like_count": 75,
@@ -58,7 +109,7 @@ def sample_message_data() -> dict:
         },
         "raw_data": {
             "tweet_id": "123456789",
-            "user_id": "test_reform_user"
+            "user_id": "test_progressive_user"
         }
     }
 
@@ -108,7 +159,7 @@ def sample_candidate_message() -> dict:
     return {
         "source_type": "twitter",
         "source_name": "Test Candidate Twitter",
-        "content": "As your Reform UK candidate for Test Constituency, I believe in putting local families first!",
+        "content": "As your Progressive Party candidate for Test Constituency, I believe in putting local families first!",
         "url": "https://twitter.com/test_candidate/status/456789",
         "message_type": "post",
         "geographic_scope": "local",

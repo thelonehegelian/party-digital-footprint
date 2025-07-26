@@ -1,5 +1,5 @@
 """
-Basic API endpoint tests for the Reform UK Messaging API.
+Basic API endpoint tests for the Political Messaging Analysis API.
 """
 
 import pytest
@@ -43,7 +43,7 @@ class TestBasicEndpoints:
         data = response.json()
         assert "info" in data
         assert "paths" in data
-        assert data["info"]["title"] == "Reform UK Messaging Analysis API"
+        assert data["info"]["title"] == "Political Messaging Analysis API"
         assert data["info"]["version"] == "2.0.0"
 
     def test_api_endpoints_exist(self, api_client: requests.Session, api_base_url: str):
