@@ -48,10 +48,13 @@ This is a data collection and analysis platform with the following key component
 - `engagement_metrics` for platform-specific engagement and virality data
 
 ### Data Collection Pipeline
-- Web scraping using Playwright and BeautifulSoup
-- Social media data collection (Twitter, Facebook, Meta Ads)
-- NLP processing for keyword extraction and issue classification
-- Multi-source aggregation with timestamp tracking
+- **API-first approach**: External tools submit data via REST API
+- **Multi-source support**: Accept data from any political messaging source
+- **Standardized format**: Consistent data transformation and validation
+- **NLP processing**: Automatic keyword extraction and issue classification
+- **Multi-party aggregation**: Party-specific data isolation and analysis
+
+*Note: Legacy scraper code in `src/scrapers/` is deprecated. The platform now focuses on API-based data ingestion from external tools.*
 
 ### Advanced Analytics System
 **Sentiment Analysis Engine:**
@@ -96,23 +99,20 @@ python scripts/setup_db.py
 
 ### Running the System
 ```bash
-# Complete scraping pipeline
-python scripts/run_scraper.py
-
-# Specific sources only
-python scripts/run_scraper.py --sources website twitter
-
-# NLP processing only
-python scripts/run_scraper.py --nlp-only
+# Start API server
+uvicorn src.api.main:app --reload
 
 # Launch dashboard
 streamlit run dashboard.py
 
-# Start API server
-uvicorn src.api.main:app --reload
-
 # Test API functionality
 python scripts/test_api.py
+
+# Add new parties
+curl -X POST "http://localhost:8000/api/v1/parties" -H "Content-Type: application/json" -d '{"name": "Party Name", "short_name": "PN"}'
+
+# Submit party data
+curl -X POST "http://localhost:8000/api/v1/messages/single?party_id=1" -H "Content-Type: application/json" -d '{"source_name": "Website", "source_type": "website", "content": "Message content"}'
 ```
 
 ### Testing and Code Quality
