@@ -47,6 +47,14 @@ This project implements a complete political messaging analytics system with:
 - API-first architecture for external integration
 - Comprehensive testing suite
 
+## Quick Start
+
+### For New Users
+See [docs/QUICKSTART.md](docs/QUICKSTART.md) for a 5-minute setup guide.
+
+### For API Integration
+See [docs/PARTY_ONBOARDING.md](docs/PARTY_ONBOARDING.md) for complete party onboarding and API integration guide.
+
 ## Quick Start with Mock Data
 
 ### Prerequisites
