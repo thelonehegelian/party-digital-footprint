@@ -1,4 +1,4 @@
-# Reform UK Messaging Analysis API - Curl Test Commands
+# Political Messaging Analysis API - Curl Test Commands
 
 ## Prerequisites
 Make sure your API server is running on `localhost:8000`
@@ -27,14 +27,14 @@ curl -X POST "http://localhost:8000/api/v1/messages/single" \
   -H "Content-Type: application/json" \
   -d '{
     "source_type": "twitter",
-    "source_name": "Reform UK Twitter",
-    "source_url": "https://twitter.com/reformparty_uk",
-    "content": "🚨 BREAKING: Immigration figures show record highs under this government. We need immediate action to secure our borders and put Britain first! 🇬🇧 #BritainFirst #Immigration #ReformUK",
-    "url": "https://twitter.com/reformparty_uk/status/1780234567890123456",
+    "source_name": "Progressive Party Twitter",
+    "source_url": "https://twitter.com/progressiveparty_uk",
+    "content": "🚨 BREAKING: Immigration figures show record highs under this government. We need immediate action to secure our borders and put Britain first! 🇬🇧 #BritainFirst #Immigration #ProgressiveParty",
+    "url": "https://twitter.com/progressiveparty_uk/status/1780234567890123456",
     "published_at": "2024-04-16T14:23:00Z",
     "message_type": "post",
     "metadata": {
-      "hashtags": ["BritainFirst", "Immigration", "ReformUK"],
+      "hashtags": ["BritainFirst", "Immigration", "ProgressiveParty"],
       "metrics": {
         "retweet_count": 245,
         "like_count": 892
@@ -49,15 +49,15 @@ curl -X POST "http://localhost:8000/api/v1/messages/single" \
   -H "Content-Type: application/json" \
   -d '{
     "source_type": "website",
-    "source_name": "Reform UK Official Website",
-    "source_url": "https://www.reformparty.uk",
-    "content": "Reform UK Calls for Immediate Action on Immigration Crisis. Our party demands urgent measures to address the unprecedented levels of immigration that are overwhelming our public services.",
-    "url": "https://www.reformparty.uk/news/immigration-crisis-action",
+    "source_name": "Progressive Party Official Website",
+    "source_url": "https://www.progressiveparty.uk",
+    "content": "Progressive Party Calls for Immediate Action on Immigration Crisis. Our party demands urgent measures to address the unprecedented levels of immigration that are overwhelming our public services.",
+    "url": "https://www.progressiveparty.uk/news/immigration-crisis-action",
     "published_at": "2024-04-15T10:30:00Z",
     "message_type": "press_release",
     "metadata": {
-      "title": "Reform UK Calls for Immediate Action on Immigration Crisis",
-      "author": "Reform UK Press Office",
+      "title": "Progressive Party Calls for Immediate Action on Immigration Crisis",
+      "author": "Progressive Party Press Office",
       "category": "policy"
     }
   }'
@@ -69,10 +69,10 @@ curl -X POST "http://localhost:8000/api/v1/messages/single" \
   -H "Content-Type: application/json" \
   -d '{
     "source_type": "facebook",
-    "source_name": "Reform UK Facebook",
-    "source_url": "https://www.facebook.com/reformpartyuk",
+    "source_name": "Progressive Party Facebook",
+    "source_url": "https://www.facebook.com/progressivepartyuk",
     "content": "🇬🇧 BRITAIN FIRST POLICIES FOR BRITISH PEOPLE 🇬🇧 Our manifesto focuses on putting British citizens first, securing our borders, and restoring national pride.",
-    "url": "https://www.facebook.com/reformpartyuk/posts/123456789012345",
+    "url": "https://www.facebook.com/progressivepartyuk/posts/123456789012345",
     "published_at": "2024-04-14T16:45:00Z",
     "message_type": "post",
     "metadata": {
@@ -92,15 +92,15 @@ curl -X POST "http://localhost:8000/api/v1/messages/single" \
   -H "Content-Type: application/json" \
   -d '{
     "source_type": "meta_ads",
-    "source_name": "Reform UK Political Ads",
+    "source_name": "Progressive Party Political Ads",
     "source_url": "https://www.facebook.com/ads/library",
-    "content": "Vote Reform UK - Britain First Policies. Secure borders, lower taxes, stronger economy. Your vote matters on May 2nd.",
+    "content": "Vote Progressive Party - Britain First Policies. Secure borders, lower taxes, stronger economy. Your vote matters on May 2nd.",
     "url": "https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=GB&view_all_page_id=987654321",
     "published_at": "2024-04-13T09:15:00Z",
     "message_type": "ad",
     "metadata": {
-      "page_name": "Reform UK",
-      "funding_entity": "Reform UK",
+      "page_name": "Progressive Party",
+      "funding_entity": "Progressive Party",
       "currency": "GBP",
       "publisher_platforms": ["Facebook", "Instagram"],
       "spend": {
@@ -119,17 +119,17 @@ curl -X POST "http://localhost:8000/api/v1/messages/bulk" \
     "messages": [
       {
         "source_type": "website",
-        "source_name": "Reform UK Website",
-        "content": "Reform UK announces new economic policy focusing on tax cuts for working families and small businesses.",
-        "url": "https://www.reformparty.uk/policies/economy",
+        "source_name": "Progressive Party Website",
+        "content": "Progressive Party announces new economic policy focusing on tax cuts for working families and small businesses.",
+        "url": "https://www.progressiveparty.uk/policies/economy",
         "published_at": "2024-04-12T11:00:00Z",
         "message_type": "policy"
       },
       {
         "source_type": "twitter",
-        "source_name": "Reform UK Twitter",
-        "content": "Our NHS needs reform, not more money thrown at it. We have a plan to make healthcare work for British people again. #NHSReform #ReformUK",
-        "url": "https://twitter.com/reformparty_uk/status/1780234567890123457",
+        "source_name": "Progressive Party Twitter",
+        "content": "Our NHS needs reform, not more money thrown at it. We have a plan to make healthcare work for British people again. #NHSReform #ProgressiveParty",
+        "url": "https://twitter.com/progressiveparty_uk/status/1780234567890123457",
         "published_at": "2024-04-12T15:30:00Z",
         "message_type": "post"
       }
@@ -155,9 +155,9 @@ curl -X POST "http://localhost:8000/api/v1/messages/single" \
   -H "Content-Type: application/json" \
   -d '{
     "source_type": "twitter",
-    "source_name": "Reform UK Twitter",
-    "content": "🚨 BREAKING: Immigration figures show record highs under this government. We need immediate action to secure our borders and put Britain first! 🇬🇧 #BritainFirst #Immigration #ReformUK",
-    "url": "https://twitter.com/reformparty_uk/status/1780234567890123456",
+    "source_name": "Progressive Party Twitter",
+    "content": "🚨 BREAKING: Immigration figures show record highs under this government. We need immediate action to secure our borders and put Britain first! 🇬🇧 #BritainFirst #Immigration #ProgressiveParty",
+    "url": "https://twitter.com/progressiveparty_uk/status/1780234567890123456",
     "published_at": "2024-04-16T14:23:00Z",
     "message_type": "post"
   }'
@@ -169,7 +169,7 @@ curl -X POST "http://localhost:8000/api/v1/messages/single" \
   -H "Content-Type: application/json" \
   -d '{
     "source_type": "twitter",
-    "source_name": "Reform UK Twitter"
+    "source_name": "Progressive Party Twitter"
   }'
 ```
 

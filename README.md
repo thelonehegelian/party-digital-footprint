@@ -122,7 +122,7 @@ uv run uvicorn src.api.main:app --reload
 
 **SQLite (default - no setup required):**
 ```env
-DATABASE_URL=sqlite:///./reform_messaging.db
+DATABASE_URL=sqlite:///./political_messaging.db
 ```
 
 **PostgreSQL (production):**

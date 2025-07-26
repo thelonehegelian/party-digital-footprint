@@ -1,6 +1,6 @@
-# Reform UK Messaging Analysis API Specification
+# Political Messaging Analysis API Specification
 
-This document defines the standard data format for submitting messaging data to the Reform UK digital footprint analysis system.
+This document defines the standard data format for submitting messaging data to the multi-party political messaging analysis system.
 
 ## Base URL
 ```
@@ -34,7 +34,7 @@ Content-Type: application/json
 
 ### Required Fields
 - `source_type`: Must be one of: `website`, `twitter`, `facebook`, `meta_ads`
-- `source_name`: Descriptive name (e.g., "Reform UK Official Website")
+- `source_name`: Descriptive name (e.g., "Progressive Party Official Website")
 - `content`: The actual text content to analyze
 
 ### Optional Fields
@@ -174,14 +174,14 @@ POST /api/v1/messages/single
 ```json
 {
   "source_type": "twitter",
-  "source_name": "Reform UK Twitter",
-  "source_url": "https://twitter.com/reformparty_uk",
+  "source_name": "Progressive Party Twitter",
+  "source_url": "https://twitter.com/progressiveparty",
   "content": "🚨 BREAKING: Immigration figures show record highs...",
-  "url": "https://twitter.com/reformparty_uk/status/1780234567890123456",
+  "url": "https://twitter.com/progressiveparty/status/1780234567890123456",
   "published_at": "2024-04-16T14:23:00Z",
   "message_type": "post",
   "metadata": {
-    "hashtags": ["BritainFirst", "Immigration", "ReformUK"],
+    "hashtags": ["ClimateAction", "Immigration", "ProgressiveParty"],
     "metrics": {
       "retweet_count": 245,
       "like_count": 892
@@ -210,12 +210,12 @@ POST /api/v1/messages/bulk
   "messages": [
     {
       "source_type": "website",
-      "source_name": "Reform UK Website",
-      "content": "Reform UK Calls for Immediate Action on Immigration Crisis..."
+      "source_name": "Progressive Party Website",
+      "content": "Progressive Party Calls for Immediate Action on Immigration Crisis..."
     },
     {
       "source_type": "facebook",
-      "source_name": "Reform UK Facebook",
+      "source_name": "Progressive Party Facebook",
       "content": "🇬🇧 BRITAIN FIRST POLICIES FOR BRITISH PEOPLE 🇬🇧..."
     }
   ]
@@ -268,10 +268,10 @@ When integrating with external data sources, transform your data to match this s
 def transform_twitter_data(tweet_data):
     return {
         "source_type": "twitter",
-        "source_name": "Reform UK Twitter",
-        "source_url": "https://twitter.com/reformparty_uk",
+        "source_name": "Progressive Party Twitter",
+        "source_url": "https://twitter.com/progressiveparty",
         "content": tweet_data["text"],
-        "url": f"https://twitter.com/reformparty_uk/status/{tweet_data['id']}",
+        "url": f"https://twitter.com/progressiveparty/status/{tweet_data['id']}",
         "published_at": tweet_data["created_at"],
         "message_type": "post",
         "metadata": {
@@ -294,7 +294,7 @@ Your scrapers should output data in this format before sending to the API:
 scraped_messages = [
     {
         "source_type": "website",
-        "source_name": "Reform UK Website", 
+        "source_name": "Progressive Party Website", 
         "content": extracted_content,
         "url": page_url,
         "published_at": parsed_date,

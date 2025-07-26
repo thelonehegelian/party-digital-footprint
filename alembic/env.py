@@ -46,7 +46,7 @@ def run_migrations_offline() -> None:
     url = config.get_main_option("sqlalchemy.url")
     if not url:
         # Get database URL from environment variable if not in config
-        url = os.getenv("DATABASE_URL", "sqlite:///./reform_messaging.db")
+        url = os.getenv("DATABASE_URL", "sqlite:///./political_messaging.db")
 
     context.configure(
         url=url,
@@ -71,7 +71,7 @@ def run_migrations_online() -> None:
     # Override URL from environment if not set in config
     if not configuration.get("sqlalchemy.url"):
         configuration["sqlalchemy.url"] = os.getenv(
-            "DATABASE_URL", "sqlite:///./reform_messaging.db"
+            "DATABASE_URL", "sqlite:///./political_messaging.db"
         )
 
     connectable = engine_from_config(

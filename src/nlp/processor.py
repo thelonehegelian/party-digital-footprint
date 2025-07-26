@@ -23,9 +23,9 @@ class BasicNLPProcessor:
             self.nlp = None
     
     def _load_political_terms(self) -> Set[str]:
-        """Load predefined political terms relevant to UK politics and Reform UK."""
+        """Load predefined political terms relevant to UK politics and general political discourse."""
         return {
-            # Core Reform UK issues
+            # Core political issues
             'immigration', 'asylum', 'refugee', 'border', 'illegal', 'boat',
             'brexit', 'eu', 'european', 'sovereignty', 'wto', 'leave',
             'economy', 'tax', 'business', 'jobs', 'inflation', 'cost',
@@ -223,7 +223,7 @@ class BasicNLPProcessor:
         themes = []
         text_lower = text.lower()
         
-        # Define theme categories based on Reform UK's key issues
+        # Define theme categories based on common political issues
         theme_patterns = {
             'immigration': ['immigration', 'asylum', 'refugee', 'border', 'boat'],
             'brexit_eu': ['brexit', 'eu', 'european', 'sovereignty', 'leave'],

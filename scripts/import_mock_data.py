@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Import mock data for testing the Reform UK messaging analysis system.
+Import mock data for testing the Progressive Party messaging analysis system.
 """
 
 import json
@@ -47,17 +47,17 @@ def create_sources() -> Dict[str, int]:
     """Create source records and return source_id mapping."""
     sources_config = {
         'website': {
-            'name': 'Reform UK Website',
-            'url': 'https://www.reformparty.uk',
+            'name': 'Progressive Party Website',
+            'url': 'https://www.progressiveparty.uk',
             'source_type': 'website'
         },
         'twitter': {
-            'name': 'Reform UK Twitter',
-            'url': 'https://twitter.com/reformparty_uk',
+            'name': 'Progressive Party Twitter',
+            'url': 'https://twitter.com/progressiveparty_uk',
             'source_type': 'twitter'
         },
         'facebook': {
-            'name': 'Reform UK Facebook',
+            'name': 'Progressive Party Facebook',
             'url': 'https://www.facebook.com/ReformPartyUK',
             'source_type': 'facebook'
         },

@@ -1567,7 +1567,7 @@ def main():
             st.download_button(
                 label="Download Messages",
                 data=csv,
-                file_name=f"reform_uk_messages_{datetime.now().strftime('%Y%m%d')}.csv",
+                file_name=f"political_messages_{datetime.now().strftime('%Y%m%d')}.csv",
                 mime="text/csv"
             )
     
@@ -1577,7 +1577,7 @@ def main():
             st.download_button(
                 label="Download Keywords",
                 data=csv,
-                file_name=f"reform_uk_keywords_{datetime.now().strftime('%Y%m%d')}.csv",
+                file_name=f"political_keywords_{datetime.now().strftime('%Y%m%d')}.csv",
                 mime="text/csv"
             )
     
@@ -1587,7 +1587,7 @@ def main():
             st.download_button(
                 label="Download Constituencies",
                 data=csv,
-                file_name=f"reform_uk_constituencies_{datetime.now().strftime('%Y%m%d')}.csv",
+                file_name=f"political_constituencies_{datetime.now().strftime('%Y%m%d')}.csv",
                 mime="text/csv"
             )
     
@@ -1597,7 +1597,7 @@ def main():
             st.download_button(
                 label="Download Candidates",
                 data=csv,
-                file_name=f"reform_uk_candidates_{datetime.now().strftime('%Y%m%d')}.csv",
+                file_name=f"political_candidates_{datetime.now().strftime('%Y%m%d')}.csv",
                 mime="text/csv"
             )
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test script to verify the Reform UK messaging analysis system works with mock data.
+Test script to verify the Progressive Party messaging analysis system works with mock data.
 """
 
 import asyncio
@@ -44,7 +44,7 @@ def test_nlp_processing():
             return False
         
         # Test with sample text
-        test_text = "Reform UK calls for immediate action on immigration crisis affecting British families and the NHS waiting lists."
+        test_text = "Progressive Party calls for immediate action on immigration crisis affecting British families and the NHS waiting lists."
         
         keywords = nlp_processor.extract_keywords(test_text)
         themes = nlp_processor.extract_message_themes(test_text)

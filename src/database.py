@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./reform_messaging.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./political_messaging.db")
 
 # Convert to async URL if needed
 if DATABASE_URL.startswith("postgresql://"):

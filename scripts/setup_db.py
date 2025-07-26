@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Database setup script for Reform UK messaging analysis.
+Database setup script for political messaging analysis.
 Creates tables and optionally seeds with sample data sources.
 """
 
@@ -19,23 +19,23 @@ def setup_database():
     create_tables()
     logger.info("Database tables created successfully")
 
-    # Seed with Reform UK sources
+    # Seed with sample sources
     with next(get_session()) as db:
         sources = [
             {
-                "name": "Reform UK Website",
-                "url": "https://www.reformparty.uk",
+                "name": "Progressive Party Website",
+                "url": "https://www.progressiveparty.uk",
                 "source_type": "website",
                 "active": True,
             },
             {
-                "name": "Reform UK Twitter",
-                "url": "https://twitter.com/reformparty_uk",
+                "name": "Progressive Party Twitter",
+                "url": "https://twitter.com/progressiveparty_uk",
                 "source_type": "twitter",
                 "active": True,
             },
             {
-                "name": "Reform UK Facebook",
+                "name": "Progressive Party Facebook",
                 "url": "https://www.facebook.com/ReformPartyUK",
                 "source_type": "facebook",
                 "active": True,
