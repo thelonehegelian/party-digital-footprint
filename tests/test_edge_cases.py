@@ -81,7 +81,8 @@ class TestEdgeCases:
     def test_null_optional_fields(
         self, 
         api_client: requests.Session, 
-        api_base_url: str
+        api_base_url: str,
+        test_party_id: int
     ):
         """Test handling of null values in optional fields."""
         null_message = {
@@ -99,7 +100,8 @@ class TestEdgeCases:
         
         response = api_client.post(
             f"{api_base_url}/api/v1/messages/single",
-            json=null_message
+            json=null_message,
+            params={"party_id": test_party_id}
         )
         
         assert response.status_code == 200

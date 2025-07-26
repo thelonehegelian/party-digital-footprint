@@ -19,7 +19,7 @@ from unittest.mock import patch
 
 from src.api.main import app
 from src.database import Base, get_session
-from src.models import Message, Source, Candidate, Constituency
+from src.models import Message, Source, Candidate, Constituency, Party
 
 
 # Test database setup
@@ -53,6 +53,23 @@ def test_db():
     db.query(Source).delete()
     db.query(Candidate).delete()
     db.query(Constituency).delete()
+    db.query(Party).delete()
+    
+    # Create test party
+    party = Party(
+        name="Test Progressive Party",
+        short_name="TPP",
+        description="Test party for intelligence analytics",
+        website_url="https://testparty.example.com",
+        social_media_accounts={
+            "twitter": "@testparty",
+            "facebook": "testparty"
+        },
+        founded_year=2020,
+        active=True
+    )
+    db.add(party)
+    db.flush()
     
     # Create test constituency
     constituency = Constituency(
@@ -67,6 +84,7 @@ def test_db():
     candidate = Candidate(
         name="Test Candidate",
         constituency_id=constituency.id,
+        party_id=party.id,
         social_media_accounts={"twitter": "@testcandidate"},
         candidate_type="local"
     )
@@ -78,6 +96,7 @@ def test_db():
         name="Test Source",
         source_type="twitter",
         url="https://twitter.com/testsource",
+        party_id=party.id,
         active=True
     )
     db.add(source)
@@ -88,6 +107,7 @@ def test_db():
         Message(
             source_id=source.id,
             candidate_id=candidate.id,
+            party_id=party.id,
             content="Test message about immigration policy changes",
             url="https://example.com/1",
             published_at=datetime.now() - timedelta(days=1),
@@ -97,6 +117,7 @@ def test_db():
         Message(
             source_id=source.id,
             candidate_id=candidate.id,
+            party_id=party.id,
             content="Economic policy announcement for local businesses",
             url="https://example.com/2",
             published_at=datetime.now() - timedelta(days=2),
@@ -105,6 +126,7 @@ def test_db():
         ),
         Message(
             source_id=source.id,
+            party_id=party.id,
             content="Healthcare system improvements needed urgently",
             url="https://example.com/3",
             published_at=datetime.now() - timedelta(days=3),
@@ -123,6 +145,9 @@ def test_db():
     # Cleanup
     db.query(Message).delete()
     db.query(Source).delete()
+    db.query(Candidate).delete()
+    db.query(Constituency).delete()
+    db.query(Party).delete()
     db.query(Candidate).delete()
     db.query(Constituency).delete()
     db.commit()

@@ -9,122 +9,146 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from src.api.main import app
-from src.database import get_session
-from src.models import Source, Message, Keyword, Candidate, Constituency, MessageSentiment
+from src.database import get_session, Base, sync_engine, SessionLocal
+from src.models import Source, Message, Keyword, Candidate, Constituency, MessageSentiment, Party
 from src.api.schemas import SearchRequest, AutocompleteRequest
+
+# Create a test database
+Base.metadata.create_all(bind=sync_engine)
+
+def override_get_session():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+app.dependency_overrides[get_session] = override_get_session
+
+@pytest.fixture
+def client():
+    """Create test client."""
+    return TestClient(app)
+
+@pytest.fixture
+def sample_data():
+    """Create sample data for testing."""
+    test_db = next(override_get_session())
+    # Create test constituency and candidate
+    constituency = Constituency(
+        name="Test Constituency",
+        region="Test Region",
+        constituency_type="district"
+    )
+    
+    party = Party(name="Test Party", short_name="TP", country="UK")
+    test_db.add(party)
+    test_db.flush()
+
+    source1 = Source(
+        party_id=party.id,
+        name="Test Twitter",
+        source_type="twitter",
+        url="https://twitter.com/test",
+        active=True
+    )
+    
+    source2 = Source(
+        party_id=party.id,
+        name="Test Website", 
+        url="https://test-website.com",
+        active=True
+    )
+    
+    candidate = Candidate(
+        name="John Smith",
+        party_id=party.id,
+        constituency=constituency,
+        candidate_type="local",
+        social_media_accounts={"twitter": "@johnsmith"}
+    )
+    
+    # Create test messages
+    message1 = Message(
+        party_id=party.id,
+        source=source1,
+        candidate=candidate,
+        content="This is a test message about immigration policy and economic reform",
+        url="https://twitter.com/test/status/123",
+        published_at=datetime.now() - timedelta(days=1),
+        message_type="tweet",
+        geographic_scope="national"
+    )
+    
+    message2 = Message(
+        party_id=party.id,
+        source=source2,
+        content="Healthcare reform is essential for our future prosperity",
+        url="https://test-website.com/healthcare-reform",
+        published_at=datetime.now() - timedelta(days=2),
+        message_type="article",
+        geographic_scope="national"
+    )
+    
+    # Create test keywords
+    keyword1 = Keyword(
+        message=message1,
+        keyword="immigration",
+        confidence=0.95,
+        extraction_method="nlp"
+    )
+    
+    keyword2 = Keyword(
+        message=message1,
+        keyword="economic reform",
+        confidence=0.88,
+        extraction_method="nlp"
+    )
+    
+    keyword3 = Keyword(
+        message=message2,
+        keyword="healthcare",
+        confidence=0.92,
+        extraction_method="nlp"
+    )
+    
+    # Create test sentiment
+    sentiment1 = MessageSentiment(
+        message=message1,
+        sentiment_score=0.3,
+        sentiment_label="positive",
+        confidence=0.85,
+        political_tone="diplomatic",
+        tone_confidence=0.78
+    )
+    
+    test_db.add_all([
+        source1, source2, constituency, candidate,
+        message1, message2, keyword1, keyword2, keyword3, sentiment1
+    ])
+    test_db.commit()
+    
+    yield {
+        'sources': [source1, source2],
+        'messages': [message1, message2],
+        'keywords': [keyword1, keyword2, keyword3],
+        'candidates': [candidate],
+        'constituencies': [constituency]
+    }
+    
+    # Clean up the database
+    test_db.query(MessageSentiment).delete()
+    test_db.query(Keyword).delete()
+    test_db.query(Message).delete()
+    test_db.query(Candidate).delete()
+    test_db.query(Constituency).delete()
+    test_db.query(Source).delete()
+    test_db.query(Party).delete()
+    test_db.commit()
 
 
 class TestSearchAPI:
     """Test the search API endpoints."""
-    
-    @pytest.fixture
-    def client(self):
-        """Create test client."""
-        return TestClient(app)
-    
-    @pytest.fixture
-    def test_db(self):
-        """Create test database session."""
-        # This would be set up with test database
-        pass
-    
-    @pytest.fixture
-    def sample_data(self, test_db):
-        """Create sample data for testing."""
-        # Create test sources
-        source1 = Source(
-            name="Test Twitter",
-            source_type="twitter",
-            url="https://twitter.com/test",
-            active=True
-        )
-        
-        source2 = Source(
-            name="Test Website",
-            source_type="website", 
-            url="https://test-website.com",
-            active=True
-        )
-        
-        # Create test constituency and candidate
-        constituency = Constituency(
-            name="Test Constituency",
-            region="Test Region",
-            constituency_type="district"
-        )
-        
-        candidate = Candidate(
-            name="John Smith",
-            constituency=constituency,
-            candidate_type="local",
-            social_media_accounts={"twitter": "@johnsmith"}
-        )
-        
-        # Create test messages
-        message1 = Message(
-            source=source1,
-            candidate=candidate,
-            content="This is a test message about immigration policy and economic reform",
-            url="https://twitter.com/test/status/123",
-            published_at=datetime.now() - timedelta(days=1),
-            message_type="tweet",
-            geographic_scope="national"
-        )
-        
-        message2 = Message(
-            source=source2,
-            content="Healthcare reform is essential for our future prosperity",
-            url="https://test-website.com/healthcare-reform",
-            published_at=datetime.now() - timedelta(days=2),
-            message_type="article",
-            geographic_scope="national"
-        )
-        
-        # Create test keywords
-        keyword1 = Keyword(
-            message=message1,
-            keyword="immigration",
-            confidence=0.95,
-            extraction_method="nlp"
-        )
-        
-        keyword2 = Keyword(
-            message=message1,
-            keyword="economic reform",
-            confidence=0.88,
-            extraction_method="nlp"
-        )
-        
-        keyword3 = Keyword(
-            message=message2,
-            keyword="healthcare",
-            confidence=0.92,
-            extraction_method="nlp"
-        )
-        
-        # Create test sentiment
-        sentiment1 = MessageSentiment(
-            message=message1,
-            sentiment_score=0.3,
-            sentiment_label="positive",
-            confidence=0.85,
-            political_tone="diplomatic",
-            tone_confidence=0.78
-        )
-        
-        test_db.add_all([
-            source1, source2, constituency, candidate,
-            message1, message2, keyword1, keyword2, keyword3, sentiment1
-        ])
-        test_db.commit()
-        
-        return {
-            'sources': [source1, source2],
-            'messages': [message1, message2],
-            'keywords': [keyword1, keyword2, keyword3],
-            'candidates': [candidate],
-            'constituencies': [constituency]
-        }
     
     def test_search_messages_basic(self, client, sample_data):
         """Test basic message search."""

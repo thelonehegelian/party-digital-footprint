@@ -19,7 +19,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from src.api.main import app
-from src.models import Base, Message, Source, Candidate, Constituency, MessageSentiment, TopicModel, MessageTopic
+from src.models import Base, Message, Source, Candidate, Constituency, MessageSentiment, TopicModel, MessageTopic, Party
 from src.database import get_session
 
 
@@ -59,12 +59,29 @@ def db_session():
 @pytest.fixture
 def sample_data_with_topics(db_session):
     """Create comprehensive sample data with topic assignments."""
+    # Create party
+    party = Party(
+        name="Test Progressive Party",
+        short_name="TPP",
+        description="Test party for topic analytics",
+        website_url="https://testparty.example.com",
+        social_media_accounts={
+            "twitter": "@testparty",
+            "facebook": "testparty"
+        },
+        founded_year=2020,
+        active=True
+    )
+    db_session.add(party)
+    db_session.flush()
+    
     # Create sources
     sources = [
         Source(
             name="Test Twitter Account",
             source_type="twitter",
             url="https://twitter.com/test",
+            party_id=party.id,
             active=True,
             last_scraped=datetime.utcnow()
         ),
@@ -72,6 +89,7 @@ def sample_data_with_topics(db_session):
             name="Test Website",
             source_type="website",
             url="https://example.com",
+            party_id=party.id,
             active=True,
             last_scraped=datetime.utcnow()
         )
@@ -91,11 +109,13 @@ def sample_data_with_topics(db_session):
         Candidate(
             name="Alice Johnson",
             constituency_id=constituencies[0].id,
+            party_id=party.id,
             candidate_type="local"
         ),
         Candidate(
             name="Bob Smith",
             constituency_id=constituencies[1].id,
+            party_id=party.id,
             candidate_type="local"
         )
     ]
@@ -141,6 +161,7 @@ def sample_data_with_topics(db_session):
         message = Message(
             source_id=msg_data["source"].id,
             candidate_id=msg_data["candidate"].id,
+            party_id=party.id,
             content=msg_data["content"],
             url=f"https://example.com/message/{len(messages)+1}",
             published_at=msg_data["published_at"],
@@ -157,7 +178,8 @@ def sample_data_with_topics(db_session):
         "messages": messages,
         "candidates": candidates,
         "constituencies": constituencies,
-        "sources": sources
+        "sources": sources,
+        "party": party
     }
 
 

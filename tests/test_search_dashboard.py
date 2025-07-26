@@ -22,92 +22,95 @@ from dashboard import (
 )
 
 
+@pytest.fixture
+def sample_messages_df():
+    """Create sample messages DataFrame."""
+    return pd.DataFrame([
+        {
+            'message_id': 1,
+            'content': 'This is a test message about immigration policy reform',
+            'url': 'https://example.com/message1',
+            'published_at': datetime.now() - timedelta(days=1),
+            'source_name': 'Test Twitter',
+            'source_type': 'twitter',
+            'geographic_scope': 'national'
+        },
+        {
+            'message_id': 2,
+            'content': 'Healthcare system needs comprehensive reform',
+            'url': 'https://example.com/message2',
+            'published_at': datetime.now() - timedelta(days=2),
+            'source_name': 'Test Website',
+            'source_type': 'website',
+            'geographic_scope': 'regional'
+        },
+        {
+            'message_id': 3,
+            'content': 'Economic policies for small business support',
+            'url': 'https://example.com/message3',
+            'published_at': datetime.now() - timedelta(days=3),
+            'source_name': 'Test Facebook',
+            'source_type': 'facebook',
+            'geographic_scope': 'local'
+        }
+    ])
+
+
+@pytest.fixture
+def sample_keywords_df():
+    """Create sample keywords DataFrame."""
+    return pd.DataFrame([
+        {
+            'keyword': 'immigration',
+            'confidence': 0.95,
+            'extraction_method': 'nlp',
+            'message_id': 1
+        },
+        {
+            'keyword': 'healthcare',
+            'confidence': 0.88,
+            'extraction_method': 'nlp',
+            'message_id': 2
+        },
+        {
+            'keyword': 'economic reform',
+            'confidence': 0.92,
+            'extraction_method': 'spacy',
+            'message_id': 3
+        }
+    ])
+
+
+@pytest.fixture
+def sample_candidates_df():
+    """Create sample candidates DataFrame."""
+    return pd.DataFrame([
+        {
+            'id': 1,
+            'name': 'John Smith',
+            'constituency_name': 'Test Constituency A',
+            'message_count': 15,
+            'candidate_type': 'local'
+        },
+        {
+            'id': 2,
+            'name': 'Jane Doe',
+            'constituency_name': 'Test Constituency B',
+            'message_count': 8,
+            'candidate_type': 'national'
+        },
+        {
+            'id': 3,
+            'name': 'Bob Johnson',
+            'constituency_name': 'Test Constituency C',
+            'message_count': 12,
+            'candidate_type': 'local'
+        }
+    ])
+
+
 class TestSearchDashboardFunctions:
     """Test dashboard search functions."""
-    
-    @pytest.fixture
-    def sample_messages_df(self):
-        """Create sample messages DataFrame."""
-        return pd.DataFrame([
-            {
-                'message_id': 1,
-                'content': 'This is a test message about immigration policy reform',
-                'url': 'https://example.com/message1',
-                'published_at': datetime.now() - timedelta(days=1),
-                'source_name': 'Test Twitter',
-                'source_type': 'twitter',
-                'geographic_scope': 'national'
-            },
-            {
-                'message_id': 2, 
-                'content': 'Healthcare system needs comprehensive reform',
-                'url': 'https://example.com/message2',
-                'published_at': datetime.now() - timedelta(days=2),
-                'source_name': 'Test Website',
-                'source_type': 'website',
-                'geographic_scope': 'regional'
-            },
-            {
-                'message_id': 3,
-                'content': 'Economic policies for small business support',
-                'url': 'https://example.com/message3', 
-                'published_at': datetime.now() - timedelta(days=3),
-                'source_name': 'Test Facebook',
-                'source_type': 'facebook',
-                'geographic_scope': 'local'
-            }
-        ])
-    
-    @pytest.fixture
-    def sample_keywords_df(self):
-        """Create sample keywords DataFrame."""
-        return pd.DataFrame([
-            {
-                'keyword': 'immigration',
-                'confidence': 0.95,
-                'extraction_method': 'nlp',
-                'message_id': 1
-            },
-            {
-                'keyword': 'healthcare',
-                'confidence': 0.88,
-                'extraction_method': 'nlp', 
-                'message_id': 2
-            },
-            {
-                'keyword': 'economic reform',
-                'confidence': 0.92,
-                'extraction_method': 'spacy',
-                'message_id': 3
-            }
-        ])
-    
-    @pytest.fixture
-    def sample_candidates_df(self):
-        """Create sample candidates DataFrame."""
-        return pd.DataFrame([
-            {
-                'id': 1,
-                'name': 'John Smith',
-                'constituency_name': 'Test Constituency A',
-                'message_count': 15,
-                'candidate_type': 'local'
-            },
-            {
-                'id': 2,
-                'name': 'Jane Doe',
-                'constituency_name': 'Test Constituency B', 
-                'message_count': 8,
-                'candidate_type': 'national'
-            },
-            {
-                'id': 3,
-                'name': 'Bob Johnson', 
-                'constituency_name': 'Test Constituency C',
-                'message_count': 12,
-                'candidate_type': 'local'
-            }
-        ])
     
     def test_perform_mock_search_messages(self, sample_messages_df, sample_keywords_df, sample_candidates_df):
         """Test mock search for messages."""
