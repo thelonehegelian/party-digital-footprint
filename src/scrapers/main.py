@@ -12,8 +12,8 @@ from .facebook import FacebookScraper
 from .meta_ads import MetaAdsScraper
 
 
-class ReformUKScraper:
-    """Main scraper orchestrator for Reform UK messaging collection."""
+class PoliticalPartyScraper:
+    """Main scraper orchestrator for Political Party messaging collection."""
     
     def __init__(self):
         self.scrapers = {
@@ -25,7 +25,7 @@ class ReformUKScraper:
     
     async def scrape_all_sources(self) -> Dict[str, int]:
         """Scrape all configured sources and store in database."""
-        logger.info("Starting Reform UK messaging collection...")
+        logger.info("Starting Political Party messaging collection...")
         
         # Ensure database tables exist
         create_tables()
@@ -71,12 +71,12 @@ class ReformUKScraper:
                 # Get or create source
                 source = db.query(Source).filter(
                     Source.source_type == source_type,
-                    Source.name == f"Reform UK {source_type.title()}"
+                    Source.name == f"Political Party {source_type.title()}"
                 ).first()
                 
                 if not source:
                     source = Source(
-                        name=f"Reform UK {source_type.title()}",
+                        name=f"Political Party {source_type.title()}",
                         source_type=source_type,
                         url=self.get_source_url(source_type),
                         active=True
@@ -136,8 +136,8 @@ class ReformUKScraper:
     def get_source_url(self, source_type: str) -> str:
         """Get the main URL for a source type."""
         urls = {
-            'website': 'https://www.reformparty.uk',
-            'twitter': 'https://twitter.com/reformparty_uk',
+            'website': 'https://www.progressiveparty.uk',
+            'twitter': 'https://twitter.com/progressiveparty_uk',
             'facebook': 'https://www.facebook.com/ReformPartyUK',
             'meta_ads': 'https://www.facebook.com/ads/library'
         }
@@ -146,7 +146,7 @@ class ReformUKScraper:
 
 async def main():
     """Main entry point for scraping."""
-    scraper = ReformUKScraper()
+    scraper = PoliticalPartyScraper()
     results = await scraper.scrape_all_sources()
     
     print("\n=== Scraping Results ===")

@@ -11,9 +11,9 @@ from .base import BaseScraper
 
 
 class WebsiteScraper(BaseScraper):
-    """Scraper for Reform UK website content."""
+    """Scraper for Political Party website content."""
     
-    def __init__(self, base_url: str = "https://www.reformparty.uk", **kwargs):
+    def __init__(self, base_url: str = "https://www.progressiveparty.uk", **kwargs):
         super().__init__(**kwargs)
         self.base_url = base_url
         self.playwright = None
@@ -39,7 +39,7 @@ class WebsiteScraper(BaseScraper):
             await self.playwright.stop()
     
     async def scrape(self) -> List[Dict[str, Any]]:
-        """Scrape Reform UK website for news, articles, and press releases."""
+        """Scrape Political Party website for news, articles, and press releases."""
         await self.setup()
         messages = []
         
@@ -62,7 +62,7 @@ class WebsiteScraper(BaseScraper):
         finally:
             await self.cleanup()
         
-        logger.info(f"Scraped {len(messages)} messages from Reform UK website")
+        logger.info(f"Scraped {len(messages)} messages from Political Party website")
         return messages
     
     async def scrape_section(self, section_path: str, message_type: str) -> List[Dict[str, Any]]:

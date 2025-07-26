@@ -13,7 +13,7 @@ class MetaAdsScraper(BaseScraper):
     
     def __init__(self, search_terms: List[str] = None, **kwargs):
         super().__init__(**kwargs)
-        self.search_terms = search_terms or ["Reform UK", "Reform Party"]
+        self.search_terms = search_terms or ["Progressive Party", "Reform Party"]
         self.access_token = None
         self.base_url = "https://graph.facebook.com/v18.0/ads_archive"
     

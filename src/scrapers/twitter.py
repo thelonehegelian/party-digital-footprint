@@ -11,7 +11,7 @@ from .base import BaseScraper
 class TwitterScraper(BaseScraper):
     """Scraper for Twitter/X content using Tweepy."""
     
-    def __init__(self, username: str = "reformparty_uk", **kwargs):
+    def __init__(self, username: str = "progressiveparty", **kwargs):
         super().__init__(**kwargs)
         self.username = username
         self.client = None
@@ -41,7 +41,7 @@ class TwitterScraper(BaseScraper):
             self.client = None
     
     async def scrape(self) -> List[Dict[str, Any]]:
-        """Scrape tweets from Reform UK Twitter account."""
+        """Scrape tweets from Political Party Twitter account."""
         if not self.client or not self.user_id:
             logger.warning("Twitter client not initialized. Skipping Twitter scraping.")
             return []
