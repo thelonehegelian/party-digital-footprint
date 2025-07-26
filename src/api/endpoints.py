@@ -8,7 +8,7 @@ from sqlalchemy import func
 from loguru import logger
 
 from ..database import get_session
-from ..models import Source, Message, Keyword, Constituency, Candidate, MessageSentiment, TopicModel, MessageTopic, EngagementMetrics
+from ..models import Party, PartyCreate, PartyResponse, Source, Message, Keyword, Constituency, Candidate, MessageSentiment, TopicModel, MessageTopic, EngagementMetrics
 from ..nlp.processor import BasicNLPProcessor
 from ..analytics.sentiment import PoliticalSentimentAnalyzer
 from ..analytics.topics import PoliticalTopicAnalyzer
@@ -40,15 +40,182 @@ engagement_analyzer = PoliticalEngagementAnalyzer()
 intelligence_generator = IntelligenceReportGenerator()
 
 
-def get_or_create_source(db: Session, source_name: str, source_type: str, source_url: str = None) -> Source:
+# ===== PARTY MANAGEMENT ENDPOINTS =====
+
+@router.post("/parties", response_model=PartyResponse)
+def create_party(party: PartyCreate, db: Session = Depends(get_session)):
+    """Create a new political party."""
+    try:
+        # Check if party already exists
+        existing = db.query(Party).filter(Party.name == party.name).first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Party with name '{party.name}' already exists"
+            )
+        
+        # Create new party
+        db_party = Party(**party.model_dump())
+        db.add(db_party)
+        db.commit()
+        db.refresh(db_party)
+        
+        logger.info(f"Created new party: {party.name}")
+        return db_party
+        
+    except Exception as e:
+        logger.error(f"Error creating party: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create party"
+        )
+
+
+@router.get("/parties", response_model=List[PartyResponse])
+def list_parties(
+    active_only: bool = Query(True, description="Filter to active parties only"),
+    db: Session = Depends(get_session)
+):
+    """List all political parties."""
+    try:
+        query = db.query(Party)
+        if active_only:
+            query = query.filter(Party.active == True)
+        
+        parties = query.order_by(Party.name).all()
+        return parties
+        
+    except Exception as e:
+        logger.error(f"Error listing parties: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve parties"
+        )
+
+
+@router.get("/parties/{party_id}", response_model=PartyResponse)
+def get_party(party_id: int, db: Session = Depends(get_session)):
+    """Get a specific party by ID."""
+    try:
+        party = db.query(Party).filter(Party.id == party_id).first()
+        if not party:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Party with ID {party_id} not found"
+            )
+        
+        return party
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving party {party_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve party"
+        )
+
+
+@router.put("/parties/{party_id}", response_model=PartyResponse)
+def update_party(party_id: int, party_update: PartyCreate, db: Session = Depends(get_session)):
+    """Update a party's information."""
+    try:
+        party = db.query(Party).filter(Party.id == party_id).first()
+        if not party:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Party with ID {party_id} not found"
+            )
+        
+        # Check if new name conflicts with existing party
+        if party_update.name != party.name:
+            existing = db.query(Party).filter(
+                Party.name == party_update.name,
+                Party.id != party_id
+            ).first()
+            if existing:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Party with name '{party_update.name}' already exists"
+                )
+        
+        # Update party fields
+        for field, value in party_update.model_dump().items():
+            setattr(party, field, value)
+        
+        party.updated_at = datetime.utcnow()
+        db.commit()
+        db.refresh(party)
+        
+        logger.info(f"Updated party: {party.name}")
+        return party
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating party {party_id}: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update party"
+        )
+
+
+@router.delete("/parties/{party_id}")
+def delete_party(party_id: int, db: Session = Depends(get_session)):
+    """Delete a party (soft delete - sets active=False)."""
+    try:
+        party = db.query(Party).filter(Party.id == party_id).first()
+        if not party:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Party with ID {party_id} not found"
+            )
+        
+        # Check if party has associated data
+        message_count = db.query(Message).filter(Message.party_id == party_id).count()
+        if message_count > 0:
+            # Soft delete - keep data but mark as inactive
+            party.active = False
+            party.updated_at = datetime.utcnow()
+            db.commit()
+            logger.info(f"Soft deleted party: {party.name} (had {message_count} messages)")
+            return {"message": f"Party '{party.name}' deactivated successfully"}
+        else:
+            # Hard delete if no associated data
+            db.delete(party)
+            db.commit()
+            logger.info(f"Hard deleted party: {party.name}")
+            return {"message": f"Party '{party.name}' deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting party {party_id}: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete party"
+        )
+
+
+def get_or_create_source(db: Session, source_name: str, source_type: str, source_url: str = None, party_id: int = None) -> Source:
     """Get existing source or create new one."""
-    source = db.query(Source).filter(
+    query = db.query(Source).filter(
         Source.name == source_name,
         Source.source_type == source_type
-    ).first()
+    )
+    
+    # Filter by party_id if provided
+    if party_id:
+        query = query.filter(Source.party_id == party_id)
+    
+    source = query.first()
     
     if not source:
         source = Source(
+            party_id=party_id or 1,  # Default to party 1 for backward compatibility
             name=source_name,
             source_type=source_type,
             url=source_url,
@@ -115,6 +282,7 @@ def check_duplicate_message(db: Session, source_id: int, content: str, url: str 
 @router.post("/messages/single", response_model=MessageResponse, tags=["messages"])
 async def submit_single_message(
     message_data: MessageInput,
+    party_id: int = Query(..., description="ID of the political party this message belongs to"),
     db: Session = Depends(get_session)
 ):
     """
@@ -133,12 +301,21 @@ async def submit_single_message(
     - Number of keywords extracted
     """
     try:
+        # Validate party exists
+        party = db.query(Party).filter(Party.id == party_id, Party.active == True).first()
+        if not party:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Party with ID {party_id} not found or inactive"
+            )
+        
         # Get or create source
         source = get_or_create_source(
             db, 
             message_data.source_name, 
             message_data.source_type,
-            message_data.source_url
+            message_data.source_url,
+            party_id
         )
         
         # Check for duplicates
@@ -158,6 +335,7 @@ async def submit_single_message(
         
         # Create new message
         message = Message(
+            party_id=party_id,
             source_id=source.id,
             candidate_id=message_data.candidate_id,
             content=message_data.content,
@@ -196,6 +374,7 @@ async def submit_single_message(
 @router.post("/messages/bulk", response_model=BulkMessageResponse, tags=["messages"])
 async def submit_bulk_messages(
     bulk_data: BulkMessageInput,
+    party_id: int = Query(..., description="ID of the political party these messages belong to"),
     db: Session = Depends(get_session)
 ):
     """
@@ -221,6 +400,14 @@ async def submit_bulk_messages(
     errors = []
     
     try:
+        # Validate party exists
+        party = db.query(Party).filter(Party.id == party_id, Party.active == True).first()
+        if not party:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Party with ID {party_id} not found or inactive"
+            )
+        
         for i, message_data in enumerate(bulk_data.messages):
             try:
                 # Get or create source
@@ -228,7 +415,8 @@ async def submit_bulk_messages(
                     db,
                     message_data.source_name,
                     message_data.source_type,
-                    message_data.source_url
+                    message_data.source_url,
+                    party_id
                 )
                 
                 # Check for duplicates
@@ -245,6 +433,7 @@ async def submit_bulk_messages(
                 
                 # Create new message
                 message = Message(
+                    party_id=party_id,
                     source_id=source.id,
                     candidate_id=message_data.candidate_id,
                     content=message_data.content,

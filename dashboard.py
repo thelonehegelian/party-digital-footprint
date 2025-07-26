@@ -8,7 +8,7 @@ from collections import Counter
 import os
 
 from src.database import get_session
-from src.models import Source, Message, Keyword, Constituency, Candidate, MessageSentiment
+from src.models import Party, Source, Message, Keyword, Constituency, Candidate, MessageSentiment
 from src.dashboard.sentiment_service import SentimentDashboardService
 from src.dashboard.sentiment_visualizations import (
     display_sentiment_overview_metrics, create_sentiment_distribution_chart,
@@ -44,26 +44,60 @@ import requests
 import time
 
 
+def load_parties():
+    """Load all active parties from database."""
+    with next(get_session()) as db:
+        parties = db.query(Party).filter(Party.active == True).order_by(Party.name).all()
+        return parties
+
+
+def get_selected_party():
+    """Get or set the selected party in session state."""
+    if 'selected_party_id' not in st.session_state:
+        # Default to first party
+        parties = load_parties()
+        if parties:
+            st.session_state.selected_party_id = parties[0].id
+        else:
+            st.session_state.selected_party_id = None
+    
+    return st.session_state.selected_party_id
+
+
+# Load party information for dynamic page title
+try:
+    parties = load_parties()
+    selected_party_id = get_selected_party()
+    current_party = next((p for p in parties if p.id == selected_party_id), None)
+    page_title = f"{current_party.name} Messaging Analysis" if current_party else "Political Messaging Analysis"
+except:
+    page_title = "Political Messaging Analysis"
+
 st.set_page_config(
-    page_title="Reform UK Messaging Analysis",
+    page_title=page_title,
     page_icon="🏛️",
     layout="wide"
 )
 
 
 @st.cache_data
-def load_data():
-    """Load data from database with caching."""
+def load_data(party_id=None):
+    """Load data from database with caching, filtered by party."""
     with next(get_session()) as db:
         # Load messages with source information and candidate/constituency data
         messages_query = db.query(Message, Source, Candidate, Constituency)\
             .join(Source)\
             .outerjoin(Candidate, Message.candidate_id == Candidate.id)\
-            .outerjoin(Constituency, Candidate.constituency_id == Constituency.id)\
-            .all()
+            .outerjoin(Constituency, Candidate.constituency_id == Constituency.id)
+        
+        # Filter by party if specified
+        if party_id:
+            messages_query = messages_query.filter(Message.party_id == party_id)
+        
+        messages_data_raw = messages_query.all()
         
         messages_data = []
-        for message, source, candidate, constituency in messages_query:
+        for message, source, candidate, constituency in messages_data_raw:
             messages_data.append({
                 'id': message.id,
                 'content': message.content,
@@ -79,14 +113,18 @@ def load_data():
                 'constituency_id': constituency.id if constituency else None,
                 'constituency_name': constituency.name if constituency else None,
                 'region': constituency.region if constituency else None,
-                'metadata': message.message_metadata or {}
+                'metadata': message.message_metadata or {},
+                'party_id': message.party_id
             })
         
-        # Load keywords
-        keywords_query = db.query(Keyword, Message).join(Message).all()
+        # Load keywords (filtered by party)
+        keywords_query = db.query(Keyword, Message).join(Message)
+        if party_id:
+            keywords_query = keywords_query.filter(Message.party_id == party_id)
+        keywords_data_raw = keywords_query.all()
         
         keywords_data = []
-        for keyword, message in keywords_query:
+        for keyword, message in keywords_data_raw:
             keywords_data.append({
                 'keyword': keyword.keyword,
                 'confidence': keyword.confidence,
@@ -138,16 +176,44 @@ def load_data():
 
 
 def main():
-    st.title("🏛️ Reform UK Digital Footprint Analysis")
-    st.markdown("Analysis of Reform UK's digital messaging across platforms and constituencies")
+    # Load parties for selector
+    parties = load_parties()
+    
+    if not parties:
+        st.error("No active parties found. Please add parties first.")
+        st.code("POST /api/v1/parties")
+        return
+    
+    # Party selector in sidebar
+    st.sidebar.header("Party Selection")
+    party_options = {party.name: party.id for party in parties}
+    selected_party_name = st.sidebar.selectbox(
+        "Select Political Party",
+        options=list(party_options.keys()),
+        index=0 if parties else None,
+        help="Choose which political party to analyze"
+    )
+    
+    selected_party_id = party_options[selected_party_name]
+    st.session_state.selected_party_id = selected_party_id
+    
+    # Get selected party details
+    selected_party = next(p for p in parties if p.id == selected_party_id)
+    
+    # Dynamic title and description
+    st.title(f"🏛️ {selected_party.name} Digital Footprint Analysis")
+    description = f"Analysis of {selected_party.name}'s digital messaging across platforms and constituencies"
+    if selected_party.description:
+        description += f"\n\n*{selected_party.description}*"
+    st.markdown(description)
     
     # Add refresh button
     if st.button("🔄 Refresh Data", help="Clear cache and reload data from database"):
         st.cache_data.clear()
         st.rerun()
     
-    # Load data
-    messages_df, keywords_df, constituencies_df, candidates_df = load_data()
+    # Load data filtered by selected party
+    messages_df, keywords_df, constituencies_df, candidates_df = load_data(selected_party_id)
     
     if messages_df.empty:
         st.warning("No data found. Please run the scraper first.")

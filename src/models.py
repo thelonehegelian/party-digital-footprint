@@ -11,16 +11,53 @@ from pydantic import BaseModel, Field
 Base = declarative_base()
 
 
+class Party(Base):
+    """Political party or organization being analyzed."""
+    __tablename__ = "parties"
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String(200), nullable=False, unique=True)
+    short_name = Column(String(50), nullable=False)  # Abbreviation or short form
+    country = Column(String(100), default="United Kingdom")
+    party_type = Column(String(50), default="political_party")  # political_party, candidate, organization
+    
+    # Basic information
+    description = Column(Text)
+    founded_year = Column(Integer)
+    headquarters = Column(String(200))
+    website_url = Column(String(500))
+    
+    # Social media accounts (JSON)
+    social_media_accounts = Column(JSON)  # {twitter: @handle, facebook: url, etc}
+    
+    # Configuration settings (JSON)
+    scraping_config = Column(JSON)  # URLs, settings for data collection
+    analytics_config = Column(JSON)  # Custom keywords, categories, etc
+    branding_config = Column(JSON)  # Colors, logos, UI customization
+    
+    # Status and metadata
+    active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    sources = relationship("Source", back_populates="party")
+    candidates = relationship("Candidate", back_populates="party")
+    messages = relationship("Message", back_populates="party")
+
+
 class Source(Base):
     __tablename__ = "sources"
     
     id = Column(Integer, primary_key=True)
+    party_id = Column(Integer, ForeignKey("parties.id"), nullable=False)
     name = Column(String(100), nullable=False)
     url = Column(Text)
     source_type = Column(String(50))  # 'website', 'twitter', 'facebook', 'meta_ads'
     last_scraped = Column(DateTime)
     active = Column(Boolean, default=True)
     
+    party = relationship("Party", back_populates="sources")
     messages = relationship("Message", back_populates="source")
 
 
@@ -39,11 +76,13 @@ class Candidate(Base):
     __tablename__ = "candidates"
     
     id = Column(Integer, primary_key=True)
+    party_id = Column(Integer, ForeignKey("parties.id"), nullable=False)
     name = Column(String(200), nullable=False)
     constituency_id = Column(Integer, ForeignKey("constituencies.id"))
     social_media_accounts = Column(JSON)  # {twitter: @handle, facebook: url}
     candidate_type = Column(String(50), default='local')  # 'national', 'local', 'both'
     
+    party = relationship("Party", back_populates="candidates")
     constituency = relationship("Constituency", back_populates="candidates")
     messages = relationship("Message", back_populates="candidate")
 
@@ -52,6 +91,7 @@ class Message(Base):
     __tablename__ = "messages"
     
     id = Column(Integer, primary_key=True)
+    party_id = Column(Integer, ForeignKey("parties.id"), nullable=False)
     source_id = Column(Integer, ForeignKey("sources.id"))
     candidate_id = Column(Integer, ForeignKey("candidates.id"), nullable=True)
     content = Column(Text, nullable=False)
@@ -63,6 +103,7 @@ class Message(Base):
     message_metadata = Column(JSON)  # hashtags, media_urls, engagement_stats
     raw_data = Column(JSON)  # store original API response
     
+    party = relationship("Party", back_populates="messages")
     source = relationship("Source", back_populates="messages")
     candidate = relationship("Candidate", back_populates="messages")
     keywords = relationship("Keyword", back_populates="message")
@@ -85,13 +126,52 @@ class Keyword(Base):
 
 
 # Indexes
+Index('idx_messages_party_id', Message.party_id)
 Index('idx_messages_published_at', Message.published_at)
 Index('idx_messages_source_id', Message.source_id)
 Index('idx_keywords_keyword', Keyword.keyword)
 
 
 # Pydantic models for API
+class PartyCreate(BaseModel):
+    name: str
+    short_name: str
+    country: str = "United Kingdom"
+    party_type: str = "political_party"
+    description: Optional[str] = None
+    founded_year: Optional[int] = None
+    headquarters: Optional[str] = None
+    website_url: Optional[str] = None
+    social_media_accounts: Optional[Dict[str, str]] = None
+    scraping_config: Optional[Dict[str, Any]] = None
+    analytics_config: Optional[Dict[str, Any]] = None
+    branding_config: Optional[Dict[str, Any]] = None
+
+
+class PartyResponse(BaseModel):
+    id: int
+    name: str
+    short_name: str
+    country: str
+    party_type: str
+    description: Optional[str]
+    founded_year: Optional[int]
+    headquarters: Optional[str]
+    website_url: Optional[str]
+    social_media_accounts: Optional[Dict[str, str]]
+    scraping_config: Optional[Dict[str, Any]]
+    analytics_config: Optional[Dict[str, Any]]
+    branding_config: Optional[Dict[str, Any]]
+    active: bool
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
 class SourceCreate(BaseModel):
+    party_id: int
     name: str
     url: Optional[str] = None
     source_type: str
@@ -100,6 +180,7 @@ class SourceCreate(BaseModel):
 
 class SourceResponse(BaseModel):
     id: int
+    party_id: int
     name: str
     url: Optional[str]
     source_type: str
@@ -127,6 +208,7 @@ class ConstituencyResponse(BaseModel):
 
 
 class CandidateCreate(BaseModel):
+    party_id: int
     name: str
     constituency_id: int
     social_media_accounts: Optional[Dict[str, str]] = None
@@ -135,6 +217,7 @@ class CandidateCreate(BaseModel):
 
 class CandidateResponse(BaseModel):
     id: int
+    party_id: int
     name: str
     constituency_id: int
     social_media_accounts: Optional[Dict[str, str]]
@@ -145,6 +228,7 @@ class CandidateResponse(BaseModel):
 
 
 class MessageCreate(BaseModel):
+    party_id: int
     source_id: int
     candidate_id: Optional[int] = None
     content: str
@@ -158,6 +242,7 @@ class MessageCreate(BaseModel):
 
 class MessageResponse(BaseModel):
     id: int
+    party_id: int
     source_id: int
     candidate_id: Optional[int]
     content: str
