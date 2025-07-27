@@ -2,7 +2,7 @@ import time
 import random
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, HTTPException, Depends, status, Query
+from fastapi import APIRouter, HTTPException, Depends, status, Query, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from loguru import logger
@@ -38,6 +38,78 @@ sentiment_analyzer = PoliticalSentimentAnalyzer()
 topic_analyzer = PoliticalTopicAnalyzer()
 engagement_analyzer = PoliticalEngagementAnalyzer()
 intelligence_generator = IntelligenceReportGenerator()
+
+
+# ===== BACKGROUND ANALYTICS PROCESSING =====
+
+def run_analytics_background(message_ids: List[int], party_id: int):
+    """
+    Background task to run analytics on newly submitted messages.
+    
+    This function runs asynchronously after API responses are returned,
+    ensuring analytics processing doesn't slow down data submission.
+    """
+    try:
+        logger.info(f"Starting background analytics for {len(message_ids)} messages")
+        
+        # Get a fresh database session for background processing
+        db = next(get_session())
+        
+        try:
+            # Run sentiment analysis on the new messages
+            sentiment_count = 0
+            for message_id in message_ids:
+                message = db.query(Message).filter(Message.id == message_id).first()
+                if message and not message.sentiment_analysis:
+                    sentiment_result = sentiment_analyzer.analyze_message_sentiment(message.content)
+                    
+                    sentiment_record = MessageSentiment(
+                        message_id=message.id,
+                        sentiment_score=sentiment_result.sentiment_score,
+                        sentiment_label=sentiment_result.sentiment_label,
+                        confidence=sentiment_result.confidence,
+                        political_tone=sentiment_result.political_tone,
+                        tone_confidence=sentiment_result.tone_confidence,
+                        emotions=sentiment_result.emotions,
+                        analysis_method=sentiment_result.analysis_method,
+                        analyzed_at=datetime.utcnow()
+                    )
+                    db.add(sentiment_record)
+                    sentiment_count += 1
+            
+            # Run topic analysis on the new messages
+            topic_count = topic_analyzer.analyze_topics_in_messages(
+                db, 
+                use_dummy=False, 
+                limit=len(message_ids)
+            )
+            
+            # Run engagement analysis on the new messages
+            engagement_count = 0
+            for message_id in message_ids:
+                message = db.query(Message).filter(Message.id == message_id).first()
+                if message:
+                    existing_engagement = db.query(EngagementMetrics)\
+                        .filter(EngagementMetrics.message_id == message.id)\
+                        .first()
+                    
+                    if not existing_engagement:
+                        engagement_metrics = engagement_analyzer.analyze_message_engagement(
+                            db, message, use_dummy=False
+                        )
+                        engagement_count += 1
+            
+            db.commit()
+            logger.info(f"Background analytics completed: {sentiment_count} sentiment, {topic_count} topics, {engagement_count} engagement")
+            
+        except Exception as e:
+            logger.error(f"Error in background analytics: {e}")
+            db.rollback()
+        finally:
+            db.close()
+            
+    except Exception as e:
+        logger.error(f"Failed to initialize background analytics: {e}")
 
 
 # ===== PARTY MANAGEMENT ENDPOINTS =====
@@ -282,6 +354,7 @@ def check_duplicate_message(db: Session, source_id: int, content: str, url: str 
 @router.post("/messages/single", response_model=MessageResponse, tags=["messages"])
 async def submit_single_message(
     message_data: MessageInput,
+    background_tasks: BackgroundTasks,
     party_id: int = Query(..., description="ID of the political party this message belongs to"),
     db: Session = Depends(get_session)
 ):
@@ -356,6 +429,9 @@ async def submit_single_message(
         
         db.commit()
         
+        # Trigger background analytics processing
+        background_tasks.add_task(run_analytics_background, [message.id], party_id)
+        
         return MessageResponse(
             status="success",
             message_id=message.id,
@@ -374,6 +450,7 @@ async def submit_single_message(
 @router.post("/messages/bulk", response_model=BulkMessageResponse, tags=["messages"])
 async def submit_bulk_messages(
     bulk_data: BulkMessageInput,
+    background_tasks: BackgroundTasks,
     party_id: int = Query(..., description="ID of the political party these messages belong to"),
     db: Session = Depends(get_session)
 ):
@@ -398,6 +475,7 @@ async def submit_bulk_messages(
     skipped_count = 0
     total_keywords = 0
     errors = []
+    new_message_ids = []  # Track newly created message IDs for analytics
     
     try:
         # Validate party exists
@@ -449,6 +527,9 @@ async def submit_bulk_messages(
                 db.add(message)
                 db.flush()
                 
+                # Track new message ID for background analytics
+                new_message_ids.append(message.id)
+                
                 # Extract keywords
                 keywords_count = extract_and_store_keywords(db, message)
                 total_keywords += keywords_count
@@ -464,6 +545,10 @@ async def submit_bulk_messages(
                 continue
         
         db.commit()
+        
+        # Trigger background analytics processing for newly imported messages
+        if new_message_ids:
+            background_tasks.add_task(run_analytics_background, new_message_ids, party_id)
         
         # Determine overall status
         if imported_count == 0:
