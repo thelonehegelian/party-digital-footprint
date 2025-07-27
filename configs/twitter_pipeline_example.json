@@ -1,0 +1,31 @@
+{
+  "api_base_url": "http://localhost:8000",
+  "party_id": 1,
+  "username": "username_without_at_symbol",
+  "max_tweets": 100,
+  "max_scroll_attempts": 15,
+  "include_retweets": true,
+  "include_replies": false,
+  "date_limit_days": 7,
+  "retry_attempts": 3,
+  "retry_delay": 5,
+  "batch_size": 25,
+  "pipeline_schedule": {
+    "description": "Example scheduling configuration (implement with cron or task scheduler)",
+    "frequency": "daily",
+    "time": "06:00",
+    "enabled": true
+  },
+  "monitoring": {
+    "enable_logging": true,
+    "log_level": "INFO",
+    "enable_metrics": true,
+    "alert_on_failure": true
+  },
+  "data_quality": {
+    "min_content_length": 10,
+    "max_content_length": 5000,
+    "filter_duplicate_content": true,
+    "validate_urls": true
+  }
+}
