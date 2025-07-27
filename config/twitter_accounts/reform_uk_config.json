@@ -1,0 +1,18 @@
+{
+  "organization": "Reform UK",
+  "description": "British political party founded in 2019",
+  "accounts": {
+    "reformparty_uk": {
+      "type": "main_account",
+      "description": "Official Reform UK account"
+    },
+    "Nigel_Farage": {
+      "type": "leader",
+      "description": "Party leader"
+    },
+    "TiceRichard": {
+      "type": "chairman",
+      "description": "Party chairman"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "organization": "Conservative Party",
+  "description": "British Conservative and Unionist Party",
+  "accounts": {
+    "Conservatives": {
+      "type": "main_account",
+      "description": "Official Conservative Party account"
+    }
+  }
+}

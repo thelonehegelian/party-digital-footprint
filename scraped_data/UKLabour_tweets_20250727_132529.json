@@ -1,0 +1,29 @@
+{
+  "scraped_at": "2025-07-27T12:25:29.167512+00:00",
+  "tweet_count": 1,
+  "tweets": [
+    {
+      "content": "Says the man fined for breaking the law twice.",
+      "url": "https://x.com/UKLabour/status/unknown",
+      "published_at": "2025-07-27 12:24:54.909907+00:00",
+      "message_type": "post",
+      "metadata": {
+        "metrics": {
+          "likes": 28000,
+          "retweets": 2800,
+          "replies": 464,
+          "quotes": 0
+        },
+        "urls": [],
+        "scraper": "twitter_playwright",
+        "scraped_at": "2025-07-27T12:24:54.971816+00:00"
+      },
+      "raw_data": {
+        "scraper": "twitter_playwright",
+        "username": "UKLabour",
+        "organization": "Labour Party",
+        "account_type": "primary"
+      }
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "organization": "Labour Party",
+  "description": "British Labour Party",
+  "accounts": {
+    "UKLabour": {
+      "type": "main_account",
+      "description": "Official Labour Party account"
+    },
+    "Keir_Starmer": {
+      "type": "leader",
+      "description": "Party leader"
+    }
+  }
+}
